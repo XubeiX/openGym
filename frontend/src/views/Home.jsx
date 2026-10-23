@@ -16,6 +16,8 @@ import { tappable } from '../lib/use-sheet-keyboard.js'
 import { glyphOf } from '../lib/glyphs.js'
 import { dayNoteOf } from '../lib/day-notes.js'
 import { weighInAt } from '../lib/bodyweight.js'
+import { enabledMeasurementFields, recentMeasurementDays } from '../lib/measurements.js'
+import { measurementLogSheet, shownValue } from './Measurements.jsx'
 
 // Home = what to do now + a quick glance. Deep charts & history live in Stats.
 export default function Home() {
@@ -94,6 +96,11 @@ export default function Home() {
   // in a coach week, the queue's sessions and your own days together (lib/queue.js weekTally).
   const { done: doneThisWeek, planned: plannedPerWeek } = weekTally(S, todayISO())
   const bwPoints = S.bodyweight.slice(-30).map(b => ({ t: weighInAt(b), y: b.w, d: b.d }))
+  // The last five days of daily measurements (calories, sleep, steps…), each row opening that
+  // day's check-in — yesterday's totals are filled in from here, not from Stats → Measurements.
+  const measureDays = recentMeasurementDays(S, todayISO())
+  // Only the fields used in those days: a waist taken once a month would be a dash on every row.
+  const measureFields = enabledMeasurementFields(S).filter(f => measureDays.some(x => shownValue(x.entry, f, S.unit) != null))
 
   // today's session shown right under the week strip
   const onToday = () => { if (S.active) nav('/workout'); else if (todayRoutines.length) startFlow(effectiveRoutineIds(S, todayISO())); else dayOverrideSheet(todayISO()) }
@@ -222,6 +229,21 @@ export default function Home() {
       </> : <div className="muted small">{S.weighIn === false
         ? t('No weigh-ins yet. Log your weight to start the curve.')
         : t("No weigh-ins yet. Log your weight to start the curve (we also ask before every workout).")}</div>}
+    </div>}
+
+    {measureDays.length > 0 && <div className="card">
+      <div className="row between" style={{ marginBottom: 6 }}>
+        <h2 style={{ margin: 0 }}>{t('Body measurements')}</h2>
+        <Button size="sm" variant="ghost" trailingIcon="chevronRight" onClick={() => nav('/measurements')}>{t('Measurement history')}</Button>
+      </div>
+      {measureDays.map(({ d, entry }) => <div className="measure-day tappable" key={d} {...tappable(() => measurementLogSheet(d))}>
+        <b>{fmtDate(d, true)}</b>
+        <span className="measure-day-v">{measureFields.map(f => {
+          const v = shownValue(entry, f, S.unit)
+          return <span key={f.key} className={v == null ? 'dim' : ''}>{t(f.label)} <b>{v == null ? '–' : fmtNum(v)}</b></span>
+        })}</span>
+        <Icon name="pencil" className="chev" />
+      </div>)}
     </div>}
 
     <div className="card tappable" style={{ cursor: 'pointer' }} {...tappable(() => calendarSheet())}>

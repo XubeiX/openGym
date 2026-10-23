@@ -20,7 +20,7 @@ const update = (fn, ...rest) => useStore.getState().update(s => { fn(s); normali
 const toast = message => useUI.getState().toast(message)
 
 const fieldUnit = (field, profileUnit) => field.key === 'bodyFat' ? '%' : measurementUnit(profileUnit)
-const shownValue = (entry, field, profileUnit) => {
+export const shownValue = (entry, field, profileUnit) => {
   const value = measurementValue(entry, field.key)
   if (value == null) return null
   return field.key === 'bodyFat' ? value : toMeasurementDisplay(value, profileUnit)
@@ -42,7 +42,8 @@ function MeasurementLog({ sourceDate, close }) {
       }
     }
   }
-  const [date, setDate] = useState(source?.d || todayISO())
+  // A date with nothing logged yet opens a fresh check-in for that day (the Home card's empty rows).
+  const [date, setDate] = useState(sourceDate || todayISO())
   const [values, setValues] = useState(() => Object.fromEntries(fields.map(f => [f.key, shownValue(source, f, S.unit)])))
 
   const save = () => {
