@@ -11,11 +11,11 @@ import QueueRow from '../components/QueueRow.jsx'
 import { queueOf, queueView, weekTally, pinState } from '../lib/queue.js'
 import { scheduleModeOf } from '../lib/rotation.js'
 import { useConnectionTrouble } from '../components/SyncBanner.jsx'
-import { Button } from '../components/ui.jsx'
+import { Button, Segmented } from '../components/ui.jsx'
 import { tappable } from '../lib/use-sheet-keyboard.js'
 import { glyphOf } from '../lib/glyphs.js'
 import { dayNoteOf } from '../lib/day-notes.js'
-import { weighInAt } from '../lib/bodyweight.js'
+import { weighInAt, movingAverage } from '../lib/bodyweight.js'
 import { enabledMeasurementFields, recentMeasurementDays } from '../lib/measurements.js'
 import { measurementLogSheet, shownValue } from './Measurements.jsx'
 
@@ -95,7 +95,10 @@ export default function Home() {
   // The streak card's fraction: this calendar week's workouts over the weekdays with a plan, or,
   // in a coach week, the queue's sessions and your own days together (lib/queue.js weekTally).
   const { done: doneThisWeek, planned: plannedPerWeek } = weekTally(S, todayISO())
-  const bwPoints = S.bodyweight.slice(-30).map(b => ({ t: weighInAt(b), y: b.w, d: b.d }))
+  // Same MA7 / MA28 choice as the Stats curve (S.bwAvg), averaged over the whole log first.
+  const bwAvg = [7, 28].includes(S.bwAvg) ? S.bwAvg : 0
+  const bwPoints = (bwAvg ? movingAverage(S.bodyweight, bwAvg) : S.bodyweight.map(b => ({ ...b, t: weighInAt(b) })))
+    .slice(-30).map(b => ({ t: b.t, y: Math.round(b.w * 100) / 100, d: b.d }))
   // The last five days of daily measurements (calories, sleep, steps…), each row opening that
   // day's check-in — yesterday's totals are filled in from here, not from Stats → Measurements.
   const measureDays = recentMeasurementDays(S, todayISO())
@@ -221,6 +224,8 @@ export default function Home() {
             <span>{t('Goal')} {fmtNum(S.targetW)} {S.unit} · {Math.abs(S.targetW - bw.w) < 0.05 ? t('reached!') : t(S.targetW > bw.w ? '{0} to gain' : '{0} to lose', fmtNum(Math.abs(S.targetW - bw.w)) + ' ' + S.unit)}</span>
           </div>
         )}
+        <div style={{ marginTop: 10 }}><Segmented className="seg-range" value={bwAvg} onChange={v => useStore.getState().update(s => { s.bwAvg = v })}
+          options={[{ value: 0, label: t('Weigh-ins') }, { value: 7, label: 'MA7' }, { value: 28, label: 'MA28' }]} /></div>
         <div className="chart" style={{ marginTop: 8 }}><LineChart points={bwPoints} h={130} unit={S.unit} goal={S.targetW} /></div>
         {/* every weigh-in, week by week with its average (Discord 'Weight') */}
         <div className="row" style={{ justifyContent: 'flex-end', marginTop: 4 }}>
