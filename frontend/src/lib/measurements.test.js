@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   MEASUREMENT_KEYS, DEFAULT_MEASUREMENT_KEYS, emptyMeasurement, enabledMeasurementFields,
   normalizeMeasurementEntry, normalizeMeasurementsState, measurementSeries,
-  toMeasurementDisplay, fromMeasurementDisplay, measurementEntryHasValues, recentMeasurementDays,
+  toMeasurementDisplay, fromMeasurementDisplay, measurementEntryHasValues, recentMeasurementDays, isLengthMeasurement,
 } from './measurements.js'
 
 describe('body measurements', () => {
@@ -100,5 +100,16 @@ describe('recentMeasurementDays', () => {
     expect(recentMeasurementDays({ measurements: [entry('2026-10-01', 2000)] }, '2026-10-23')).toEqual([])
     expect(recentMeasurementDays({ measurements: [entry('2026-10-22', null)] }, '2026-10-23')).toEqual([])
     expect(recentMeasurementDays({}, '2026-10-23')).toEqual([])
+  })
+})
+
+describe('custom measurement units', () => {
+  it('keeps a custom field as typed on an lb profile, unlike a circumference', () => {
+    const state = { unit: 'lb', measurements: [{ d: '2026-10-21', waist: 81.28, other: [{ id: 'kcal', name: 'Kcal', value: 2881 }] }] }
+    expect(measurementSeries(state, 'other:kcal')[0].y).toBe(2881)
+    expect(measurementSeries(state, 'waist')[0].y).toBe(32)
+    expect(isLengthMeasurement('waist')).toBe(true)
+    expect(isLengthMeasurement('bodyFat')).toBe(false)
+    expect(isLengthMeasurement('other:kcal')).toBe(false)
   })
 })

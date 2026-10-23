@@ -32,6 +32,9 @@ const round = n => Math.round(n * 10) / 10
 const valid = v => Number.isFinite(+v) && +v > 0 ? round(+v) : null
 
 export const measurementUnit = unit => unit === 'lb' ? 'in' : 'cm'
+// Only the built-in circumferences are lengths. Body fat is a percentage, and a custom field is
+// whatever its name says (calories, steps, hours of sleep): stored as typed, never converted.
+export const isLengthMeasurement = key => key !== 'bodyFat' && !key.startsWith('other:')
 export const toMeasurementDisplay = (cm, unit) => cm == null ? null : round(unit === 'lb' ? cm / 2.54 : cm)
 export const fromMeasurementDisplay = (value, unit) => value == null ? null : valid(unit === 'lb' ? +value * 2.54 : +value)
 
@@ -131,12 +134,12 @@ export function enabledMeasurementFields(state) {
 export function measurementSeries(state, key, range = 0, now = Date.now()) {
   const cutoff = range ? now - range * 86400000 : -Infinity
   const unit = state.unit || 'kg'
-  const percent = key === 'bodyFat'
+  const length = isLengthMeasurement(key)
   return (state.measurements || []).map(entry => {
     const raw = measurementValue(entry, key)
     const at = new Date(entry.d + 'T12:00:00').getTime()
     if (raw == null || at < cutoff) return null
-    return { t: at, d: entry.d, y: percent ? raw : toMeasurementDisplay(raw, unit) }
+    return { t: at, d: entry.d, y: length ? toMeasurementDisplay(raw, unit) : raw }
   }).filter(Boolean)
 }
 

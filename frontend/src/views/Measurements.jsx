@@ -5,7 +5,7 @@ import { useUI } from '../store/useUI.js'
 import {
   MEASUREMENT_FIELDS, MEASUREMENT_KEYS, emptyMeasurement, enabledMeasurementFields,
   fromMeasurementDisplay, latestMeasurement, measurementEntryHasValues,
-  measurementSeries, measurementUnit, measurementValue, normalizeMeasurementEntry,
+  measurementSeries, measurementUnit, measurementValue, normalizeMeasurementEntry, isLengthMeasurement,
   toMeasurementDisplay, normalizeMeasurementsState,
 } from '../lib/measurements.js'
 import { fmtDate, fmtNum, todayISO, uid } from '../lib/format.js'
@@ -19,11 +19,12 @@ import { confirmSheet } from '../sheets.jsx'
 const update = (fn, ...rest) => useStore.getState().update(s => { fn(s); normalizeMeasurementsState(s) }, ...rest)
 const toast = message => useUI.getState().toast(message)
 
-const fieldUnit = (field, profileUnit) => field.key === 'bodyFat' ? '%' : measurementUnit(profileUnit)
+const unitOf = (key, profileUnit) => key === 'bodyFat' ? '%' : isLengthMeasurement(key) ? measurementUnit(profileUnit) : ''
+const fieldUnit = (field, profileUnit) => unitOf(field.key, profileUnit)
 export const shownValue = (entry, field, profileUnit) => {
   const value = measurementValue(entry, field.key)
   if (value == null) return null
-  return field.key === 'bodyFat' ? value : toMeasurementDisplay(value, profileUnit)
+  return isLengthMeasurement(field.key) ? toMeasurementDisplay(value, profileUnit) : value
 }
 
 function MeasurementLog({ sourceDate, close }) {
@@ -60,7 +61,7 @@ function MeasurementLog({ sourceDate, close }) {
       if (field.key === 'bodyFat' && value > 100) { toast(t('Body fat must be between 0 and 100%.')); return }
       if (field.custom) {
         const item = base.other.find(o => o.id === field.key.slice(6))
-        if (item) item.value = value == null ? null : fromMeasurementDisplay(value, S.unit)
+        if (item) item.value = value
       } else if (field.key === 'bodyFat') base.bodyFat = value
       else base[field.key] = value == null ? null : fromMeasurementDisplay(value, S.unit)
     }
@@ -172,7 +173,7 @@ export default function Measurements() {
   const key = available.some(f => f.key === selected) ? selected : fallback
   const field = available.find(f => f.key === key)
   const points = key ? measurementSeries(S, key, range) : []
-  const unit = key === 'bodyFat' ? '%' : measurementUnit(S.unit)
+  const unit = key ? unitOf(key, S.unit) : ''
   const all = key ? measurementSeries(S, key) : []
   const latest = all.at(-1)
   const previous = all.at(-2)
