@@ -106,6 +106,8 @@ export const DEF = {
   exWeights: {}, workouts: [], active: null, customEx: [], gifSize: 'full',
   // Stats activity heatmap metric. Profiles without this key continue to open on time.
   heatmapMetric: 'time',
+  // Stats body weight curve: 0 plots each weigh-in, 7 / 28 the trailing MA7 / MA28 (lib/bodyweight.js).
+  bwAvg: 0,
   // How the active workout is laid out — 'cards' (one exercise at a time with Prev/Next),
   // 'list' (every exercise stacked and scrollable) or 'compact' (that stack stripped to just
   // names and set rows — no media, tags, notes, last-time or progression line). Purely

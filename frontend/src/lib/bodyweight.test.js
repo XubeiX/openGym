@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { weeklyWeights, weighInAt } from './bodyweight.js'
+import { weeklyWeights, weighInAt, movingAverage } from './bodyweight.js'
 
 // Discord 'Weight': every weigh-in, week by week, with the week's mean.
 describe('weeklyWeights', () => {
@@ -54,5 +54,14 @@ describe('weighInAt', () => {
 
   it('puts one with no time at noon of its day', () => {
     expect(weighInAt({ d: '2026-03-02', w: 84 })).toBe(at('2026-03-02T12:00:00'))
+  })
+})
+
+describe('movingAverage', () => {
+  it('averages the trailing calendar days, not the last n weigh-ins', () => {
+    const log = [{ d: '2026-09-03', w: 82 }, { d: '2026-09-01', w: 80 }, { d: '2026-09-08', w: 78 }, { d: '2026-09-09', w: 0 }]
+    expect(movingAverage(log, 7).map(p => [p.d, p.w])).toEqual([['2026-09-01', 80], ['2026-09-03', 81], ['2026-09-08', 80]])
+    expect(movingAverage(log, 28).map(p => p.w)).toEqual([80, 81, 80])
+    expect(movingAverage(log, 5).map(p => p.w)).toEqual([80, 81, 78])
   })
 })

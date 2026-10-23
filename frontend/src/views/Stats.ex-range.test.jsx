@@ -87,6 +87,6 @@ describe('Stats: exercise progress date range', () => {
     mount([session(400, 100), session(200, 90), session(5, 80)])
     const bwCard = [...host.querySelectorAll('.card')].find(c => c.querySelector('h2')?.textContent === 'Body weight')
     press(exCard(), '1M')
-    expect([...bwCard.querySelectorAll('.seg button.on')].map(b => b.textContent)).toEqual(['3M'])
+    expect([...bwCard.querySelectorAll('.seg button.on')].map(b => b.textContent)).toEqual(['3M', 'Weigh-ins'])
   })
 })
