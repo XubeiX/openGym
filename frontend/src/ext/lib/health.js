@@ -13,7 +13,7 @@ let entry = null
 function load() {
   if (entry && Date.now() - entry.at < TTL_MS) return entry.p
   const e = { at: Date.now() }
-  e.p = api('/api/ext/ptv4?set=health').then(
+  e.p = Promise.resolve().then(() => api('/api/ext/ptv4?set=health')).then(
     items => { setFails(0); return items },
     err => {
       // the sidecar refused or did not answer (the api's 503); a phone with no network is not a problem here
@@ -31,7 +31,8 @@ export function useHealth() {
   const [st, setSt] = useState({ items: null, down: getFails() >= 2 })
   useEffect(() => {
     let live = true
-    load().then(items => live && setSt({ items, down: false }), () => live && setSt({ items: null, down: getFails() >= 2 }))
+    load().then(items => live && setSt({ items: Array.isArray(items) ? items : null, down: false }),
+      () => live && setSt({ items: null, down: getFails() >= 2 }))
     return () => { live = false }
   }, [])
   return st
