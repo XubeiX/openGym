@@ -31,19 +31,24 @@ function monthTicks(t0, t1, max = 6) {
 
 export default function ExtChart({ series = [], bands = [], h = 180, unit = '', fmt = v => v.toLocaleString('pl-PL', { maximumFractionDigits: 1 }) }) {
   const wrap = useRef(null)
-  const [w, setW] = useState(600)
+  // No width until measured: an svg drawn wider than the phone for one frame made mobile browsers
+  // zoom the whole page out, and they do not zoom back in.
+  const [w, setW] = useState(null)
   const [hover, setHover] = useState(null)
   useLayoutEffect(() => {
     const el = wrap.current
     if (!el) return
-    const ro = new ResizeObserver(([e]) => setW(Math.max(240, Math.round(e.contentRect.width))))
+    const fit = width => setW(Math.max(200, Math.floor(width)))
+    fit(el.clientWidth)
+    const ro = new ResizeObserver(([e]) => fit(e.contentRect.width))
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
+  if (w == null) return <div ref={wrap} style={{ height: h + 30, minWidth: 0 }} />
 
   const ts = [...series.flatMap(s => s.points.map(p => p.t)), ...bands.flatMap(b => b.points.map(p => p.t))]
   const ys = [...series.flatMap(s => s.points.map(p => p.y)), ...bands.flatMap(b => b.points.flatMap(p => [p.lo, p.hi]))].filter(Number.isFinite)
-  if (!ts.length || !ys.length) return <div ref={wrap} className="small muted" style={{ padding: '24px 0', textAlign: 'center' }}>{t('No data yet')}</div>
+  if (!ts.length || !ys.length) return <div ref={wrap} className="small muted" style={{ minWidth: 0, padding: '24px 0', textAlign: 'center' }}>{t('No data yet')}</div>
   const t0 = Math.min(...ts), t1 = Math.max(...ts)
   const lo = Math.min(...ys), hi = Math.max(...ys), padY = (hi - lo) * 0.08 || 1
   const ticks = niceTicks(lo - padY, hi + padY)
@@ -62,8 +67,8 @@ export default function ExtChart({ series = [], bands = [], h = 180, unit = '', 
   }
   const near = (pts, at) => pts.reduce((b, p) => Math.abs(p.t - at) <= 4 * DAY && (!b || Math.abs(p.t - at) < Math.abs(b.t - at)) ? p : b, null)
 
-  return <div ref={wrap} style={{ position: 'relative' }}>
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block', touchAction: 'pan-y' }}
+  return <div ref={wrap} style={{ position: 'relative', minWidth: 0 }}>
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block', maxWidth: '100%', touchAction: 'pan-y' }}
       onPointerMove={onMove} onPointerLeave={() => setHover(null)} role="img">
       {ticks.map(v => <g key={v}>
         <line x1={PAD.l} x2={w - PAD.r} y1={Y(v)} y2={Y(v)} stroke="var(--sep)" strokeWidth="1" />
