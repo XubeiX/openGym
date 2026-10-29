@@ -36,8 +36,9 @@ const known = (S, names) => names.filter(n => (S.customMeasurements || []).some(
 /**
  * [{ id, label, detail?, day, action }] for what is missing at `now`; [] while snoozed.
  * action: 'weigh' (the weigh-in sheet), 'log' (the check-in of `day`), 'info' (a message only).
+ * garminDown: the integration state already warns that the watch's data stopped, so sleep is not asked twice.
  */
-export function missingChecks(S, now, ext) {
+export function missingChecks(S, now, ext, { garminDown = false } = {}) {
   const today = isoOf(now), yesterday = shift(today, -1)
   if (ext?.snooze && ext.snooze >= today) return []
   const c = checksOf(ext), f = fieldsOf(ext), out = []
@@ -58,7 +59,7 @@ export function missingChecks(S, now, ext) {
       out.push({ id: 'fitatu', day: yesterday, action: 'log', detail: `${Math.round(macroKcal / eat * 100)}%` })
   }
 
-  if (c.sleep.on && hour >= c.sleep.after && known(S, [f.sleep]).some(n => valueOf(S, n, today) == null))
+  if (c.sleep.on && !garminDown && hour >= c.sleep.after && known(S, [f.sleep]).some(n => valueOf(S, n, today) == null))
     out.push({ id: 'sleep', day: today, action: 'info' })
 
   if (c.burn.on) {

@@ -25,3 +25,4 @@
 @media (min-width:480px){.ext-tiles{grid-template-columns:1fr 1fr}}
 @media (min-width:900px){.ext-tiles{grid-template-columns:repeat(3,1fr)}}
 .ext-tiles .tile .v{font-size:22px}
+.ext-health{border:1px solid var(--red)}

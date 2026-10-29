@@ -7,6 +7,7 @@ import { measurementLogSheet } from '../../views/Measurements.jsx'
 import { Button } from '../../components/ui.jsx'
 import Icon from '../../components/Icon.jsx'
 import { missingChecks } from '../lib/checks.js'
+import { useHealth, garminDown } from '../lib/health.js'
 import { extOf, setExt } from '../state.js'
 import { L } from '../strings.js'
 
@@ -19,7 +20,7 @@ const open = item => {
 // Top of Home: only what is missing, one row each; gone once everything is in.
 export default function DataCheckCard() {
   const S = useStore(s => s.S)
-  const missing = missingChecks(S, new Date(), extOf(S))
+  const missing = missingChecks(S, new Date(), extOf(S), { garminDown: garminDown(useHealth()) })
   if (!missing.length) return null
   return <div className="card">
     <div className="row between" style={{ marginBottom: 6 }}>

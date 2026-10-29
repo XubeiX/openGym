@@ -94,4 +94,13 @@ export const L = {
   energyTiles: { tdeeCard: 'TDEE', weight: 'Waga', protein: 'Białko' },
   numbersTiles: { tdee: 'TDEE', balAdapt: 'Bilans adapt.', balWatch: 'Bilans zegarek', protein: 'Białko', sleep: 'Sen', prs: 'Rekordy' },
   homeTileSub: 'TDEE, bilans, waga i białko liczone przez ptv4',
+  // stan integracji (Etap 2b)
+  healthTitle: 'Coś przestało działać',
+  healthSection: 'Stan integracji',
+  healthFooter: 'Sidecar ptv4 sprawdza Garmina, Fitatu i backupy; ostrzeżenie na Starcie pojawia się tylko przy problemie.',
+  healthUnknown: 'Brak danych o stanie integracji (sidecar nie odpowiada albo to nie Twój profil ptv4).',
+  sidecarDown: 'Brak połączenia z sidecarem',
+  sidecarDownSub: 'Dwie próby z rzędu bez odpowiedzi ptv4.',
+  sidecarDownMsg: 'Sidecar ptv4 nie odpowiada: sprawdź na serwerze docker compose ps w /opt/ptv4-sidecar/sidecar.',
+  readme: 'README ptv4',
 }

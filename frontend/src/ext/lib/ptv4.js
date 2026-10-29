@@ -14,29 +14,30 @@ const store = (set, data) => { try { localStorage.setItem(KEY(set), JSON.stringi
 // One request per set at a time, and none again within 5 minutes unless `fresh`.
 const TTL_MS = 5 * 60 * 1000
 const inflight = new Map()
-export function ptv4(set, fresh = false) {
+export function ptv4(set, fresh = false, persist = true) {
   const hit = inflight.get(set)
   if (hit && (!fresh || hit.pending) && Date.now() - hit.at < TTL_MS) return hit.p
   const entry = { at: Date.now(), pending: true }
   entry.p = api('/api/ext/ptv4?set=' + set)
-    .then(data => { entry.pending = false; store(set, data); return data })
+    .then(data => { entry.pending = false; if (persist) store(set, data); return data })
     .catch(e => { inflight.delete(set); throw e })
   inflight.set(set, entry)
   return entry.p
 }
 
 // { data: { <set>: rows } } from the stored answers at once (or { loading }), then the fresh ones;
-// { error } only when there is nothing stored to show. `fresh`: ask the server even within 5 minutes.
-export function usePtv4(sets, { fresh = false } = {}) {
+// { error } only when there is nothing stored to show. `fresh`: ask the server even within 5 minutes;
+// `persist: false`: nothing stored (the integration state, where an old answer would mislead).
+export function usePtv4(sets, { fresh = false, persist = true } = {}) {
   const key = sets.join(',')
   const initial = () => {
-    const all = sets.map(stored)
+    const all = sets.map(s => persist ? stored(s) : null)
     return all.every(d => d != null) ? { data: Object.fromEntries(sets.map((s, i) => [s, all[i]])), stale: true } : { loading: true }
   }
   const [st, setSt] = useState(initial)
   useEffect(() => {
     let live = true
-    Promise.all(sets.map(s => ptv4(s, fresh))).then(
+    Promise.all(sets.map(s => ptv4(s, fresh, persist))).then(
       rows => live && setSt(prev => {
         const data = Object.fromEntries(sets.map((s, i) => [s, rows[i]]))
         return prev.data && JSON.stringify(prev.data) === JSON.stringify(data) ? { data: prev.data } : { data }
@@ -44,7 +45,7 @@ export function usePtv4(sets, { fresh = false } = {}) {
       e => {
         // signed out or another profile: what is stored is someone else's, so it goes
         if (e?.status === 401 || e?.status === 403) sets.forEach(s => { try { localStorage.removeItem(KEY(s)) } catch { /* blocked */ } })
-        if (live) setSt(prev => prev.data && e?.status !== 401 && e?.status !== 403 ? { ...prev, stale: true } : { error: e?.message || String(e) })
+        if (live) setSt(prev => prev.data && e?.status !== 401 && e?.status !== 403 ? { ...prev, stale: true } : { error: e?.message || String(e), status: e?.status })
       })
     return () => { live = false }
   }, [key]) // eslint-disable-line react-hooks/exhaustive-deps

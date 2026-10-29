@@ -5,6 +5,7 @@ import { Section, Row, Switch, Segmented, SelectRow } from '../../components/ui.
 import Icon from '../../components/Icon.jsx'
 import { useListReorder, moved } from '../../lib/use-list-reorder.js'
 import { layoutOf, withSection } from '../layout.js'
+import { useHealth } from '../lib/health.js'
 import { CHECKS, checksOf, fieldsOf } from '../lib/checks.js'
 import { extOf, setExt, setExtIn } from '../state.js'
 import { L } from '../strings.js'
@@ -55,6 +56,18 @@ function LayoutList({ ext, where, title, footer }) {
   </Section>
 }
 
+// Every integration the sidecar checks, the working ones too: ✓ ok, ! broken (with its README section), ? unknown.
+function HealthList() {
+  const h = useHealth()
+  const mark = ok => ok === true ? ['checkCircle', 'var(--green)'] : ok === false ? ['info', 'var(--red)'] : ['info', 'var(--label-3)']
+  return <Section title={L.healthSection} footer={L.healthFooter}>
+    {h.down && <Row icon="info" iconTint="var(--red)" title={L.sidecarDown} subtitle={L.sidecarDownMsg} />}
+    {!h.down && !h.items && <Row title={L.healthUnknown} />}
+    {(h.items || []).map(i => { const [icon, tint] = mark(i.ok); return <Row key={i.id} icon={icon} iconTint={tint} title={i.label}
+      subtitle={i.message + (i.ok === false && i.help ? ` ${L.readme}: „${i.help}”.` : '')} /> })}
+  </Section>
+}
+
 // Settings → Look & Home → Dodatki: which fork cards show on Home, and what the data-check card asks for.
 export default function ExtSettings() {
   const S = useStore(s => s.S)
@@ -68,6 +81,7 @@ export default function ExtSettings() {
   return <>
     <LayoutList ext={ext} where="home" title={L.onHome} footer={L.layoutHomeFooter} />
     <LayoutList ext={ext} where="stats" title={L.statsTitle} footer={L.layoutStatsFooter} />
+    <HealthList />
 
     {checksOn && <Section title={L.checksSection} footer={L.checksFooter}>
       {Object.keys(CHECKS).map(id => {

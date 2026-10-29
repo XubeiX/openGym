@@ -9,6 +9,7 @@ before(async () => {
   sidecar = http.createServer((req, res) => {
     seen.push({ path: req.url, key: req.headers['x-ext-key'] });
     if (req.url === '/dashboard/kpi') { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end('[{"ma7":84}]'); return; }
+    if (req.url === '/health') { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end('[{"id":"fitatu","ok":false}]'); return; }
     if (req.url === '/dashboard/body') { res.writeHead(503); res.end('{"error":"Limit 30 zapytań"}'); return; }
     res.writeHead(404); res.end();
   });
@@ -32,6 +33,7 @@ function call(user, query, env = { PTV4_URL: url, PTV4_KEY: 'k', PTV4_UID: 'me' 
 test('passes a set through with the key, never asked of the browser', async () => {
   assert.deepEqual(await call({ id: 'me' }, '?set=kpi'), { code: 200, body: [{ ma7: 84 }] });
   assert.deepEqual(seen.at(-1), { path: '/dashboard/kpi', key: 'k' });
+  assert.deepEqual(await call({ id: 'me' }, '?set=health'), { code: 200, body: [{ id: 'fitatu', ok: false }] });
 });
 
 test('401 without a session, 403 for another profile, 400 for an unknown set', async () => {

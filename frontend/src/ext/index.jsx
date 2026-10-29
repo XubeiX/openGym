@@ -4,6 +4,7 @@ import './ext.css'
 import { useStore } from '../store/useStore.js'
 import { extOf } from './state.js'
 import { layoutOf } from './layout.js'
+import HealthCard from './components/HealthCard.jsx'
 import DataCheckCard from './components/DataCheckCard.jsx'
 import TodayCard from './components/TodayCard.jsx'
 import WeightCard from './components/WeightCard.jsx'
@@ -13,5 +14,8 @@ const CARDS = { checks: DataCheckCard, today: TodayCard, weight: WeightCard, rec
 
 export function ExtHomeCards() {
   const ext = extOf(useStore(s => s.S))
-  return <>{layoutOf(ext, 'home').filter(c => c.on).map(c => { const Card = CARDS[c.id]; return <Card key={c.id} tiles={c.tiles} /> })}</>
+  return <>
+    <HealthCard />{/* always first, and only while something is broken */}
+    {layoutOf(ext, 'home').filter(c => c.on).map(c => { const Card = CARDS[c.id]; return <Card key={c.id} tiles={c.tiles} /> })}
+  </>
 }

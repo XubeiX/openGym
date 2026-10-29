@@ -38,6 +38,7 @@ describe('missingChecks', () => {
     const S = state([day('2026-10-28', FULL)])
     expect(ids(S, 9)).toEqual([])
     expect(ids(S, 10)).toEqual(['sleep'])
+    expect(missingChecks(S, at(10), undefined, { garminDown: true })).toEqual([]) // the health card says it already
   })
 
   it('steps and kcal burnt are off unless switched on', () => {
