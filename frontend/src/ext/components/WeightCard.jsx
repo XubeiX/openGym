@@ -1,5 +1,6 @@
 import { useStore } from '../../store/useStore.js'
 import { fmtDate, fmtNum } from '../../lib/format.js'
+import { dateLocale } from '../../lib/i18n.js'
 import { weighInAt } from '../../lib/bodyweight.js'
 import { bwSheet, goalSheet, bwDeltaColor, weighInsSheet } from '../../sheets.jsx'
 import LineChart from '../../components/LineChart.jsx'
@@ -20,6 +21,8 @@ export default function WeightCard() {
     .map(r => ({ d: r.d, w: Math.round(r[key] * 100) / 100, t: weighInAt(byDay.get(r.d)) }))
   const last = series.at(-1), prev = series.at(-2)
   const delta = last && prev ? Math.round((last.w - prev.w) * 100) / 100 : null
+  // MA to 0.01 like ptv4's dashboard; fmtNum would cut 83.96 to 84
+  const fmt = v => avg ? v.toLocaleString(dateLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : fmtNum(v)
   const points = series.slice(-30).map(b => ({ t: b.t, y: b.w, d: b.d }))
 
   return <div className="card">
@@ -32,10 +35,10 @@ export default function WeightCard() {
     </div>
     {!S.bodyweight.length ? <div className="muted small">{L.noWeighIns}</div> : <>
       {last ? <div className="row" style={{ gap: 8, alignItems: 'baseline' }}>
-        <div className="big">{fmtNum(last.w)} <span className="muted" style={{ fontSize: '1rem' }}>{S.unit}</span></div>
+        <div className="big">{fmt(last.w)} <span className="muted" style={{ fontSize: '1rem' }}>{S.unit}</span></div>
         {!!delta && <span className="small row" style={{ gap: 2, fontWeight: 500, color: bwDeltaColor(delta, last.w) }}>
           <Icon name={delta > 0 ? 'arrowUp' : 'arrowDown'} style={{ fontSize: 12 }} />
-          {fmtNum(Math.abs(delta))}
+          {fmt(Math.abs(delta))}
         </span>}
         <span className="dim small" style={{ marginInlineStart: 'auto' }}>{fmtDate(last.d, true)}</span>
       </div> : <div className="muted small">{L.maMissing(avg)}</div>}
