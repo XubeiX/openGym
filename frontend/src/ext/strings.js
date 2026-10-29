@@ -63,6 +63,7 @@ export const L = {
   statsSub: 'Liczby i wykresy liczone przez ptv4',
   byPtv4: 'ptv4',
   loading: 'Pobieram dane z ptv4…',
+  refreshing: 'Pokazuję ostatnie dane, sprawdzam nowsze…',
   ptv4Error: 'Nie udało się pobrać danych z ptv4',
   sections: { numbers: 'Liczby', energy: 'Masa i energia' },
   tiles: {
@@ -73,7 +74,7 @@ export const L = {
   tdeeCard: 'TDEE i energia tygodniowo',
   tdeeCaption: 'Liczone przez ptv4 (adaptacyjny TDEE z 28 dni)',
   tdeeWeek: (range, week) => `zakres ${range}, tydzień do ${week}`,
-  series: { tdee: 'TDEE', eat: 'spożycie', burn: 'spalone (zegarek)', ma7: 'MA7', ma28: 'MA28', weight: 'ważenia', protein: 'białko', range: 'cel' },
+  series: { tdee: 'TDEE', tdeeRange: 'zakres TDEE', eat: 'spożycie', burn: 'spalone (zegarek)', ma7: 'MA7', ma28: 'MA28', weight: 'ważenia', protein: 'białko', range: 'cel (min–max)' },
   weightHistory: 'Waga z MA7 / MA28, pełna historia',
   proteinWeekly: 'Białko tygodniowo z zakresem',
   balAdapt: 'Bilans adaptacyjny', balWatch: 'Bilans z zegarka',
