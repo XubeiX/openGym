@@ -20,7 +20,14 @@ function niceTicks(min, max, n = 4) {
   return out
 }
 
+// Month starts over a long span; under ten weeks, every 7th day with its date ("12 paź").
 function monthTicks(t0, t1, max = 6) {
+  if (t1 - t0 < 70 * DAY) {
+    const step = Math.ceil((t1 - t0) / DAY / 7 / max) * 7 * DAY || 7 * DAY
+    const out = []
+    for (let v = t0; v <= t1; v += step) out.push({ t: v, label: new Date(v).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' }) })
+    return out
+  }
   const out = []
   const d = new Date(t0); d.setDate(1); d.setHours(12, 0, 0, 0)
   if (d.getTime() < t0) d.setMonth(d.getMonth() + 1)
@@ -74,8 +81,8 @@ export default function ExtChart({ series = [], bands = [], h = 180, unit = '', 
         <line x1={PAD.l} x2={w - PAD.r} y1={Y(v)} y2={Y(v)} stroke="var(--sep)" strokeWidth="1" />
         <text x={PAD.l - 6} y={Y(v) + 4} textAnchor="end" fontSize="11" fill="var(--label-3)">{fmt(v)}</text>
       </g>)}
-      {monthTicks(t0, t1).map(m => <text key={m.t} x={X(m.t)} y={h - 6} textAnchor="middle" fontSize="11" fill="var(--label-3)">
-        {t(MONTHS[m.m])}{m.m === 0 ? ' ' + m.y : ''}
+      {monthTicks(t0, t1).map(m => <text key={m.t} x={X(m.t)} y={h - 6} textAnchor={X(m.t) > w - 30 ? 'end' : X(m.t) < PAD.l + 20 ? 'start' : 'middle'} fontSize="11" fill="var(--label-3)">
+        {m.label || t(MONTHS[m.m]) + (m.m === 0 ? ' ' + m.y : '')}
       </text>)}
       {bands.map(b => {
         const pts = b.points.filter(p => Number.isFinite(p.lo) && Number.isFinite(p.hi))

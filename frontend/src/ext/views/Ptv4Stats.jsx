@@ -1,11 +1,16 @@
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../store/useStore.js'
 import Icon from '../../components/Icon.jsx'
+import { Segmented } from '../../components/ui.jsx'
 import { usePtv4, at } from '../lib/ptv4.js'
 import ExtChart from '../components/ExtChart.jsx'
 import { L } from '../strings.js'
 import { layoutOf } from '../layout.js'
-import { extOf } from '../state.js'
+import { extOf, setExt } from '../state.js'
+
+// The charts' time window (Liczby keep ptv4's own 28 days); a year at most, older is history.
+const RANGES = { '1M': 31, '3M': 92, '1Y': 365 }
+const since = (rows, date, days) => { const cut = Date.now() - days * 86400000; return rows.filter(r => at(r[date]) >= cut) }
 
 const C = { s1: 'var(--ext-s1)', s2: 'var(--ext-s2)', s3: 'var(--ext-s3)', neutral: 'var(--ext-neutral)' }
 // rows → a chart series of `key` by `date`
@@ -81,7 +86,9 @@ function Energy({ energy, body, tiles }) {
 export default function Ptv4Stats() {
   const nav = useNavigate()
   const st = usePtv4(['kpi', 'energy', 'body'], { fresh: true })
-  const layout = layoutOf(extOf(useStore(s => s.S)), 'stats')
+  const ext = extOf(useStore(s => s.S))
+  const layout = layoutOf(ext, 'stats')
+  const range = RANGES[ext.statsRange] ? ext.statsRange : '3M'
   return <div className="ext-page">
     <div className="hdr">
       <button className="iconbtn" data-back="/home" onClick={() => nav(-1)} aria-label="Wstecz"><Icon name="chevronLeft" /></button>
@@ -89,10 +96,12 @@ export default function Ptv4Stats() {
     </div>
     {(st.loading || st.stale) && <div className="small muted" style={{ margin: '0 4px 8px' }}>{st.loading ? L.loading : L.refreshing}</div>}
     {st.error && <div className="card small" style={{ color: 'var(--red)' }}>{L.ptv4Error}: {st.error}</div>}
+    {st.data && <Segmented className="seg-range" value={range} onChange={v => setExt({ statsRange: v })}
+      options={Object.keys(RANGES).map(v => ({ value: v, label: v }))} />}
     {st.data && layout.filter(sec => sec.on).map(sec => <div key={sec.id}>
       <h2 className="ext-sec">{L.sections[sec.id]}</h2>
       {sec.id === 'numbers' && (st.data.kpi[0] ? <Numbers k={st.data.kpi[0]} tiles={sec.tiles} /> : <div className="card muted small">{L.noData}</div>)}
-      {sec.id === 'energy' && <Energy energy={st.data.energy} body={st.data.body} tiles={sec.tiles} />}
+      {sec.id === 'energy' && <Energy energy={since(st.data.energy, 'week_end', RANGES[range])} body={since(st.data.body, 'date', RANGES[range])} tiles={sec.tiles} />}
     </div>)}
   </div>
 }

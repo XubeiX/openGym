@@ -5,6 +5,7 @@ import { useStore } from '../store/useStore.js'
 
 export const EXT_DEFAULTS = {
   weightAvg: 0, // weight card: 0 = weigh-ins, 7 / 28 = MA7 / MA28 (lib/weight-ma.js)
+  // statsRange: Statystyki+ charts' window, '1M' | '3M' | '1Y' (default 3M)
   // layout: Home cards and Statystyki+ sections, order and switches (layout.js; it also reads the
   // homeChecks / homeToday / homeWeight / homeRecent switches saved before it)
   // checks: { <id>: { on, days, after, everyDays } } and fields: { <role>: name } over lib/checks.js

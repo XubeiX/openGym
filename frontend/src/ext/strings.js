@@ -75,7 +75,7 @@ export const L = {
   tdeeCaption: 'Liczone przez ptv4 (adaptacyjny TDEE z 28 dni)',
   tdeeWeek: (range, week) => `zakres ${range}, tydzień do ${week}`,
   series: { tdee: 'TDEE', tdeeRange: 'zakres TDEE', eat: 'spożycie', burn: 'spalone (zegarek)', ma7: 'MA7', ma28: 'MA28', weight: 'ważenia', protein: 'białko', range: 'cel (min–max)' },
-  weightHistory: 'Waga z MA7 / MA28, pełna historia',
+  weightHistory: 'Waga z MA7 / MA28',
   proteinWeekly: 'Białko tygodniowo z zakresem',
   balAdapt: 'Bilans adaptacyjny', balWatch: 'Bilans z zegarka',
   uncertain: 'Niepewny',
