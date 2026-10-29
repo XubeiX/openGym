@@ -6,9 +6,9 @@ import { usePtv4, at } from '../lib/ptv4.js'
 import ExtChart from '../components/ExtChart.jsx'
 import { L } from '../strings.js'
 import { layoutOf } from '../layout.js'
-import { extOf, setExt } from '../state.js'
+import { extOf, setExtIn } from '../state.js'
 
-// The charts' time window (Liczby keep ptv4's own 28 days); a year at most, older is history.
+// A chart's time window; a year at most, older is history.
 const RANGES = { '1M': 31, '3M': 92, '1Y': 365 }
 const since = (rows, date, days) => { const cut = Date.now() - days * 86400000; return rows.filter(r => at(r[date]) >= cut) }
 
@@ -37,6 +37,15 @@ function Numbers({ k, tiles }) {
   </div>
 }
 
+// A chart's own 1M / 3M / 1Y switch, as on openGym's body-weight card; saved per chart in
+// S.ext.chartRange (3M by default). Liczby keep ptv4's own windows.
+function useRange(id) {
+  const r = extOf(useStore(s => s.S)).chartRange?.[id]
+  return RANGES[r] ? r : '3M'
+}
+const RangeSwitch = ({ id, value }) => <Segmented className="seg-range" value={value} onChange={v => setExtIn('chartRange', id, v)}
+  options={Object.keys(RANGES).map(v => ({ value: v, label: v }))} />
+
 // Masa i energia: TDEE with its range, eat and burn by week; weight with MA7 / MA28; protein by week.
 function Energy({ energy, body, tiles }) {
   const unit = useStore(s => s.S.unit)
@@ -48,6 +57,9 @@ function Energy({ energy, body, tiles }) {
   const proteinBand = { key: 'range', name: L.series.range, color: C.neutral,
     points: energy.filter(r => r.protein_min != null).map(r => ({ t: at(r.week_end), lo: r.protein_min, hi: r.protein_max })) }
   const kcalFmt = v => Math.round(v).toLocaleString('pl-PL')
+  const rt = useRange('tdee'), rw = useRange('weight'), rp = useRange('protein')
+  const eT = since(energy, 'week_end', RANGES[rt]), eP = since(energy, 'week_end', RANGES[rp]), bW = since(body, 'date', RANGES[rw])
+  const inRange = (band, rows) => ({ ...band, points: band.points.filter(p => rows.some(r => at(r.week_end) === p.t)) })
   return <>
     {tiles.tdeeCard !== false && <div className="card">
       <div className="row between"><h2 style={{ margin: 0 }}>{L.tdeeCard}</h2><span className="small muted">{L.byPtv4}</span></div>
@@ -55,8 +67,9 @@ function Energy({ energy, body, tiles }) {
         <div className="big" style={{ marginTop: 6 }}>{wk.tdee.toLocaleString('pl-PL')} <span className="muted" style={{ fontSize: '1rem' }}>kcal</span></div>
         <div className="small muted">{L.tdeeWeek(range(wk), wk.week_end)}</div>
         <div style={{ marginTop: 10 }}>
-          <ExtChart h={200} unit="kcal" fmt={kcalFmt} bands={[tdeeBand]}
-            series={[series('tdee', energy, 'week_end', 'tdee', C.s1), series('eat', energy, 'week_end', 'eat', C.s2), series('burn', energy, 'week_end', 'burn', C.s3)]} />
+          <RangeSwitch id="tdee" value={rt} />
+          <ExtChart h={200} unit="kcal" fmt={kcalFmt} bands={[inRange(tdeeBand, eT)]}
+            series={[series('tdee', eT, 'week_end', 'tdee', C.s1), series('eat', eT, 'week_end', 'eat', C.s2), series('burn', eT, 'week_end', 'burn', C.s3)]} />
         </div>
         <div className="row between small" style={{ marginTop: 10 }}><span>{L.balAdapt} (28 dni)</span><b>{kcal(last.bal_adapt_28)}</b></div>
         <div className="row between small" style={{ marginTop: 4 }}><span>{L.balWatch} (28 dni)</span><b>{kcal(last.bal_watch_28)}</b></div>
@@ -68,15 +81,17 @@ function Energy({ energy, body, tiles }) {
     {tiles.weight !== false && <div className="card">
       <div className="row between"><h2 style={{ margin: 0 }}>{L.weightHistory}</h2><span className="small muted">{L.byPtv4}</span></div>
       <div style={{ marginTop: 10 }}>
+        <RangeSwitch id="weight" value={rw} />
         <ExtChart h={200} unit={unit}
-          series={[series('weight', body, 'date', 'weight', C.neutral, 'dots'), series('ma28', body, 'date', 'ma28', C.s2), series('ma7', body, 'date', 'ma7', C.s1)]} />
+          series={[series('weight', bW, 'date', 'weight', C.neutral, 'dots'), series('ma28', bW, 'date', 'ma28', C.s2), series('ma7', bW, 'date', 'ma7', C.s1)]} />
       </div>
     </div>}
 
     {tiles.protein !== false && <div className="card">
       <div className="row between"><h2 style={{ margin: 0 }}>{L.proteinWeekly}</h2><span className="small muted">{L.byPtv4}</span></div>
       <div style={{ marginTop: 10 }}>
-        <ExtChart h={180} unit="g" fmt={kcalFmt} bands={[proteinBand]} series={[series('protein', energy, 'week_end', 'protein', C.s1)]} />
+        <RangeSwitch id="protein" value={rp} />
+        <ExtChart h={180} unit="g" fmt={kcalFmt} bands={[inRange(proteinBand, eP)]} series={[series('protein', eP, 'week_end', 'protein', C.s1)]} />
       </div>
     </div>}
   </>
@@ -88,7 +103,6 @@ export default function Ptv4Stats() {
   const st = usePtv4(['kpi', 'energy', 'body'], { fresh: true })
   const ext = extOf(useStore(s => s.S))
   const layout = layoutOf(ext, 'stats')
-  const range = RANGES[ext.statsRange] ? ext.statsRange : '3M'
   return <div className="ext-page">
     <div className="hdr">
       <button className="iconbtn" data-back="/home" onClick={() => nav(-1)} aria-label="Wstecz"><Icon name="chevronLeft" /></button>
@@ -96,12 +110,10 @@ export default function Ptv4Stats() {
     </div>
     {(st.loading || st.stale) && <div className="small muted" style={{ margin: '0 4px 8px' }}>{st.loading ? L.loading : L.refreshing}</div>}
     {st.error && <div className="card small" style={{ color: 'var(--red)' }}>{L.ptv4Error}: {st.error}</div>}
-    {st.data && <Segmented className="seg-range" value={range} onChange={v => setExt({ statsRange: v })}
-      options={Object.keys(RANGES).map(v => ({ value: v, label: v }))} />}
     {st.data && layout.filter(sec => sec.on).map(sec => <div key={sec.id}>
       <h2 className="ext-sec">{L.sections[sec.id]}</h2>
       {sec.id === 'numbers' && (st.data.kpi[0] ? <Numbers k={st.data.kpi[0]} tiles={sec.tiles} /> : <div className="card muted small">{L.noData}</div>)}
-      {sec.id === 'energy' && <Energy energy={since(st.data.energy, 'week_end', RANGES[range])} body={since(st.data.body, 'date', RANGES[range])} tiles={sec.tiles} />}
+      {sec.id === 'energy' && <Energy energy={st.data.energy} body={st.data.body} tiles={sec.tiles} />}
     </div>)}
   </div>
 }
