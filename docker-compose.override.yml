@@ -1,0 +1,12 @@
+# Fork extension (Etap 2), merged by `docker compose` over docker-compose.yml; upstream has no such file.
+# The api joins opengym-ext, the network ptv4's sidecar is on, and reads http://sidecar:8091 with the
+# key from .env (PTV4_URL, PTV4_KEY, PTV4_UID; see .env.example's ext block). Create the network once:
+#     docker network create opengym-ext
+# Always `docker compose up -d --build`, never `pull`: the ghcr images are upstream's, without ext/.
+services:
+  api:
+    networks: [default, opengym-ext]
+
+networks:
+  opengym-ext:
+    external: true
