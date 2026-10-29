@@ -8,6 +8,7 @@ export const EXT_DEFAULTS = {
   homeWeight: true, // Home cards, switched in Settings → Dodatki
   homeRecent: true,
   homeChecks: true,
+  homeToday: true,
   // checks: { <id>: { on, days, after, everyDays } } and fields: { <role>: name } over lib/checks.js
   // CHECKS / FIELDS; snooze: the data-check card is hidden through this date
 }

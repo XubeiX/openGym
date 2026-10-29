@@ -31,6 +31,9 @@ export default function ExtSettings() {
       <Row icon="checkCircle" iconTint="var(--orange)" title={L.checksCardTitle} subtitle={L.checksCardSub}>
         <Switch aria-label={L.checksCardTitle} checked={ext.homeChecks} onChange={v => setExt({ homeChecks: v })} />
       </Row>
+      <Row icon="sparkles" iconTint="var(--purple)" title={L.todayCardTitle} subtitle={L.todayCardSub}>
+        <Switch aria-label={L.todayCardTitle} checked={ext.homeToday} onChange={v => setExt({ homeToday: v })} />
+      </Row>
       <Row icon="scale" iconTint="var(--green)" title={L.weightCardTitle} subtitle={L.weightCardSub}>
         <Switch aria-label={L.weightCardTitle} checked={ext.homeWeight} onChange={v => setExt({ homeWeight: v })} />
       </Row>
