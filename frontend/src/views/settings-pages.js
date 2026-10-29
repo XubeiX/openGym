@@ -7,6 +7,7 @@
 // and checks that each entry below really is a row there.
 import { t } from '../lib/i18n.js'
 import { ACCENT_NAMES } from '../lib/format.js'
+import { EXT_PAGES } from '../ext/settings-page.js' // ext
 
 export const PAGES = {
   workout: { title: 'Workout', icon: 'play', tint: 'var(--green)' },
@@ -24,6 +25,7 @@ export const PAGES = {
   advanced: { title: 'Fine-tuning', icon: 'wrench', tint: 'var(--grey)', parent: 'workout' },
 }
 export const PAGE_IDS = Object.keys(PAGES)
+Object.assign(PAGES, EXT_PAGES) // ext
 
 // The root, top to bottom. Whether a row shows is pageVisible's call.
 export const ROOT_GROUPS = [['workout', 'alerts', 'reminders'], ['plan', 'units', 'equipment'], ['look', 'coach', 'watch'], ['data', 'about']]

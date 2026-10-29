@@ -13,4 +13,10 @@ export const L = {
   maMissing: n => `Za mało ważeń na MA${n}.`,
   measurements: 'Pomiary',
   measurementHistory: 'Historia pomiarów',
+  onHome: 'Strona główna',
+  onHomeFooter: 'Wbudowaną kartę masy ciała wyłączysz w Wygląd i Start.',
+  weightCardTitle: 'Waga z MA7 / MA28',
+  weightCardSub: 'Karta wagi z przełącznikiem średnich liczonych jak w ptv4.',
+  recentCardTitle: 'Pomiary z 5 dni',
+  recentCardSub: 'Ostatnie dni pomiarów; dotknij dnia, żeby go uzupełnić.',
 }

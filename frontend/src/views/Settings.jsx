@@ -47,6 +47,7 @@ import { passwordOn, PasswordRow, openPasswordSignIn, openPasswordRegister } fro
 import { usePasskeys, PasskeysRow, DeviceLinkRow, openDeviceLinkRedeem } from '../components/Passkeys.jsx'
 import { DeleteAccountRow } from '../components/DeleteAccount.jsx'
 import { Section, Row, SelectRow, Switch, Segmented, Button, TextField, SearchField } from '../components/ui.jsx'
+import ExtSettings from '../ext/views/ExtSettings.jsx' // ext
 import { PAGES, ROOT_GROUPS, pageVisible, searchSettings, pageTrail } from './settings-pages.js'
 import { platformNow } from '../lib/platform-now.js'
 import { pathBefore } from '../lib/nav.js'
@@ -489,6 +490,7 @@ export default function Settings({ page = null, find = null, via = null, entryKe
     })} />
 
   const pages = {
+    ext: () => <ExtSettings />, // ext
     watch: () => <WatchSettingsPage />,
     workout: () => <>
       <Section title={t('Rest')} footer={t('Each exercise can have its own rest too. Set it in the exercise settings of a routine.')}>
@@ -816,6 +818,7 @@ export default function Settings({ page = null, find = null, via = null, entryKe
           subtitle={t('Show the body weight card on Home.')}>
           <Switch checked={S.showWeightCard !== false} onChange={v => update(s => { s.showWeightCard = v })} />
         </Row>
+        <Row icon={PAGES.ext.icon} iconTint={PAGES.ext.tint} title={PAGES.ext.title} accessory="chevron" onClick={() => open('ext')} />{/* ext */}
         {/* The bar at the top that says the app is offline, kept local, or not synced (#369, #330).
             Here and not under Server & sync, which a phone kept local never shows. Switching it on
             also brings back the no-server line its × hid (#454). */}

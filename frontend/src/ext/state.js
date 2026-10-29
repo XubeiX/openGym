@@ -5,6 +5,8 @@ import { useStore } from '../store/useStore.js'
 
 export const EXT_DEFAULTS = {
   weightAvg: 0, // weight card: 0 = weigh-ins, 7 / 28 = MA7 / MA28 (lib/weight-ma.js)
+  homeWeight: true, // Home cards, switched in Settings → Dodatki
+  homeRecent: true,
 }
 
 export const extOf = S => ({ ...EXT_DEFAULTS, ...(S?.ext || {}) })
