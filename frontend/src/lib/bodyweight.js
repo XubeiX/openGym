@@ -52,21 +52,3 @@ export function logWeighIn(s, w, at = Date.now()) {
   s.bodyweight.sort((a, b) => (a.d < b.d ? -1 : 1))
   return true
 }
-
-/**
- * The trailing moving average of the weigh-ins over `days` calendar days (MA7, MA28 on the Stats
- * curve): each weigh-in replaced by the mean of every weigh-in on its day and the `days - 1` days
- * before it. By calendar days, not by count, so a gap in logging does not stretch the window.
- * Returns [{ d, w, t }] oldest first, `t` from the weigh-in it stands on.
- */
-export function movingAverage(bodyweight, days) {
-  const log = (Array.isArray(bodyweight) ? bodyweight : [])
-    .filter(b => b?.d && Number(b.w) > 0).slice().sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : 0))
-  const dayOf = b => Math.round(new Date(b.d + 'T12:00:00').getTime() / 86400000)
-  let from = 0, sum = 0
-  return log.map((b, i) => {
-    sum += Number(b.w)
-    while (dayOf(log[from]) <= dayOf(b) - days) sum -= Number(log[from++].w)
-    return { d: b.d, w: sum / (i - from + 1), t: weighInAt(b) }
-  })
-}

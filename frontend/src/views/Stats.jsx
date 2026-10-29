@@ -19,7 +19,7 @@ import { fatigueStateOf } from '../lib/recovery-view.js'
 import { e1rmSeries, best1RM, formulaOf } from '../lib/onerm.js'
 import { currentDbLoad, workoutAs } from '../lib/dumbbells.js'
 import { maxRepsSeries } from '../lib/pyramid.js'
-import { weighInAt, movingAverage } from '../lib/bodyweight.js'
+import { weighInAt } from '../lib/bodyweight.js'
 import { perSetSessions, perSetLines, dropOffSet } from '../lib/per-set.js'
 import {
   hasEffort, hasEstimableEffort, displayScale, scaleName, toScale, avgRir, effortSummary, effortWeeks,
@@ -433,12 +433,8 @@ export default function Stats() {
   const kind = displayScale(S)
   const hd = scaleName(kind)
 
-  // MA7 / MA28 run over the whole log before the range cuts it, so the first point in range
-  // still averages the days before it.
-  const bwAvg = [7, 28].includes(S.bwAvg) ? S.bwAvg : 0
-  const bwPts = (bwAvg ? movingAverage(S.bodyweight, bwAvg) : S.bodyweight.map(b => ({ ...b, t: weighInAt(b) })))
-    .filter(b => range === 0 || b.t > now - range * 86400000)
-    .map(b => ({ t: b.t, y: Math.round(b.w * 100) / 100, d: b.d }))
+  const bwPts = S.bodyweight.filter(b => range === 0 || weighInAt(b) > now - range * 86400000)
+    .map(b => ({ t: weighInAt(b), y: b.w, d: b.d }))
   const bw30 = S.bodyweight.filter(b => weighInAt(b) > now - 30 * 86400000)
   const bwDelta30 = bw30.length > 1 ? bw30[bw30.length - 1].w - bw30[0].w : null
   const workouts = S.workouts
@@ -696,8 +692,6 @@ export default function Stats() {
         </div>
         <Segmented className="seg-range" value={range} onChange={setRange}
           options={rangeOptions()} />
-        <Segmented className="seg-range" value={bwAvg} onChange={v => useStore.getState().update(s => { s.bwAvg = v })}
-          options={[{ value: 0, label: t('Weigh-ins') }, { value: 7, label: 'MA7' }, { value: 28, label: 'MA28' }]} />
         <div className="chart"><LineChart points={bwPts} h={160} unit={S.unit} goal={S.targetW} /></div>
         {/* every weigh-in, week by week with its average (Discord 'Weight') */}
         {S.bodyweight.length > 0 && <div className="row" style={{ justifyContent: 'flex-end', marginTop: 4 }}>

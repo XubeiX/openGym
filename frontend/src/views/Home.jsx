@@ -11,13 +11,11 @@ import QueueRow from '../components/QueueRow.jsx'
 import { queueOf, queueView, weekTally, pinState } from '../lib/queue.js'
 import { scheduleModeOf } from '../lib/rotation.js'
 import { useConnectionTrouble } from '../components/SyncBanner.jsx'
-import { Button, Segmented } from '../components/ui.jsx'
+import { Button } from '../components/ui.jsx'
 import { tappable } from '../lib/use-sheet-keyboard.js'
 import { glyphOf } from '../lib/glyphs.js'
 import { dayNoteOf } from '../lib/day-notes.js'
-import { weighInAt, movingAverage } from '../lib/bodyweight.js'
-import { enabledMeasurementFields, recentMeasurementDays } from '../lib/measurements.js'
-import { measurementLogSheet, shownValue } from './Measurements.jsx'
+import { weighInAt } from '../lib/bodyweight.js'
 
 // Home = what to do now + a quick glance. Deep charts & history live in Stats.
 export default function Home() {
@@ -95,15 +93,7 @@ export default function Home() {
   // The streak card's fraction: this calendar week's workouts over the weekdays with a plan, or,
   // in a coach week, the queue's sessions and your own days together (lib/queue.js weekTally).
   const { done: doneThisWeek, planned: plannedPerWeek } = weekTally(S, todayISO())
-  // Same MA7 / MA28 choice as the Stats curve (S.bwAvg), averaged over the whole log first.
-  const bwAvg = [7, 28].includes(S.bwAvg) ? S.bwAvg : 0
-  const bwPoints = (bwAvg ? movingAverage(S.bodyweight, bwAvg) : S.bodyweight.map(b => ({ ...b, t: weighInAt(b) })))
-    .slice(-30).map(b => ({ t: b.t, y: Math.round(b.w * 100) / 100, d: b.d }))
-  // The last five days of daily measurements (calories, sleep, steps…), each row opening that
-  // day's check-in — yesterday's totals are filled in from here, not from Stats → Measurements.
-  const measureDays = recentMeasurementDays(S, todayISO())
-  // Only the fields used in those days: a waist taken once a month would be a dash on every row.
-  const measureFields = enabledMeasurementFields(S).filter(f => measureDays.some(x => shownValue(x.entry, f, S.unit) != null))
+  const bwPoints = S.bodyweight.slice(-30).map(b => ({ t: weighInAt(b), y: b.w, d: b.d }))
 
   // today's session shown right under the week strip
   const onToday = () => { if (S.active) nav('/workout'); else if (todayRoutines.length) startFlow(effectiveRoutineIds(S, todayISO())); else dayOverrideSheet(todayISO()) }
@@ -224,8 +214,6 @@ export default function Home() {
             <span>{t('Goal')} {fmtNum(S.targetW)} {S.unit} · {Math.abs(S.targetW - bw.w) < 0.05 ? t('reached!') : t(S.targetW > bw.w ? '{0} to gain' : '{0} to lose', fmtNum(Math.abs(S.targetW - bw.w)) + ' ' + S.unit)}</span>
           </div>
         )}
-        <div style={{ marginTop: 10 }}><Segmented className="seg-range" value={bwAvg} onChange={v => useStore.getState().update(s => { s.bwAvg = v })}
-          options={[{ value: 0, label: t('Weigh-ins') }, { value: 7, label: 'MA7' }, { value: 28, label: 'MA28' }]} /></div>
         <div className="chart" style={{ marginTop: 8 }}><LineChart points={bwPoints} h={130} unit={S.unit} goal={S.targetW} /></div>
         {/* every weigh-in, week by week with its average (Discord 'Weight') */}
         <div className="row" style={{ justifyContent: 'flex-end', marginTop: 4 }}>
@@ -234,21 +222,6 @@ export default function Home() {
       </> : <div className="muted small">{S.weighIn === false
         ? t('No weigh-ins yet. Log your weight to start the curve.')
         : t("No weigh-ins yet. Log your weight to start the curve (we also ask before every workout).")}</div>}
-    </div>}
-
-    {measureDays.length > 0 && <div className="card">
-      <div className="row between" style={{ marginBottom: 6 }}>
-        <h2 style={{ margin: 0 }}>{t('Body measurements')}</h2>
-        <Button size="sm" variant="ghost" trailingIcon="chevronRight" onClick={() => nav('/measurements')}>{t('Measurement history')}</Button>
-      </div>
-      {measureDays.map(({ d, entry }) => <div className="measure-day tappable" key={d} {...tappable(() => measurementLogSheet(d))}>
-        <b>{fmtDate(d, true)}</b>
-        <span className="measure-day-v">{measureFields.map(f => {
-          const v = shownValue(entry, f, S.unit)
-          return <span key={f.key} className={v == null ? 'dim' : ''}>{t(f.label)} <b>{v == null ? '–' : fmtNum(v)}</b></span>
-        })}</span>
-        <Icon name="pencil" className="chev" />
-      </div>)}
     </div>}
 
     <div className="card tappable" style={{ cursor: 'pointer' }} {...tappable(() => calendarSheet())}>
