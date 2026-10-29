@@ -4,3 +4,4 @@
 .measure-day-v b{color:var(--label);font-weight:500}
 .measure-day-v .dim b{color:var(--label-3)}
 .ext-sec{font-size:15px;color:var(--label-2);margin:18px 4px 8px}
+.ext-chips .chip{text-transform:none}

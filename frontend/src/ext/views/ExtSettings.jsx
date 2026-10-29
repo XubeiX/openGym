@@ -2,6 +2,9 @@ import { useStore } from '../../store/useStore.js'
 import { DAYS } from '../../lib/format.js'
 import { t } from '../../lib/i18n.js'
 import { Section, Row, Switch, Segmented, SelectRow } from '../../components/ui.jsx'
+import Icon from '../../components/Icon.jsx'
+import { useListReorder, moved } from '../../lib/use-list-reorder.js'
+import { layoutOf, withSection } from '../layout.js'
 import { CHECKS, checksOf, fieldsOf } from '../lib/checks.js'
 import { extOf, setExt, setExtIn } from '../state.js'
 import { L } from '../strings.js'
@@ -17,32 +20,56 @@ function DayChips({ days, onChange }) {
   </div>
 }
 
+const SECTIONS = {
+  home: {
+    checks: { title: L.checksCardTitle, sub: L.checksCardSub, icon: 'checkCircle', tint: 'var(--orange)' },
+    today: { title: L.todayCardTitle, sub: L.todayCardSub, icon: 'sparkles', tint: 'var(--purple)', tiles: L.todayTiles },
+    weight: { title: L.weightCardTitle, sub: L.weightCardSub, icon: 'scale', tint: 'var(--green)' },
+    recent: { title: L.recentCardTitle, sub: L.recentCardSub, icon: 'ruler', tint: 'var(--teal)' },
+  },
+  stats: {
+    numbers: { title: L.sections.numbers, icon: 'chartLine', tint: 'var(--blue)', tiles: L.numbersTiles },
+    energy: { title: L.sections.energy, icon: 'flame', tint: 'var(--orange)', tiles: L.energyTiles },
+  },
+}
+
+// One reorderable list: a section per row with its switch and handle, its tiles as chips under it.
+function LayoutList({ ext, where, title, footer }) {
+  const list = layoutOf(ext, where)
+  const save = l => setExt({ layout: { ...(ext.layout || {}), [where]: l } })
+  const r = useListReorder(list.length, (from, to) => save(moved(list, from, to)))
+  return <Section title={title} footer={footer}>
+    <div ref={r.listRef}>{list.map((sec, i) => {
+      const d = SECTIONS[where][sec.id]
+      return <div key={sec.id} data-reorder-row style={r.rowStyle(i)}>
+        <Row icon={d.icon} iconTint={d.tint} title={d.title} subtitle={d.sub}>
+          <Switch aria-label={d.title} checked={sec.on} onChange={v => save(withSection(ext, where, sec.id, { on: v }))} />
+          <button className="plan-handle" aria-label={L.moveSection(d.title)} {...r.handle(i)}><Icon name="chevronsUpDown" /></button>
+        </Row>
+        {sec.on && d.tiles && <div className="chips ext-chips" style={{ padding: '0 16px 10px' }}>
+          {Object.entries(d.tiles).map(([id, name]) => <button key={id} type="button" className={'chip' + (sec.tiles[id] ? ' on' : '')}
+            aria-pressed={sec.tiles[id]} onClick={() => save(withSection(ext, where, sec.id, { tiles: { [id]: !sec.tiles[id] } }))}>{name}</button>)}
+        </div>}
+      </div>
+    })}</div>
+  </Section>
+}
+
 // Settings → Look & Home → Dodatki: which fork cards show on Home, and what the data-check card asks for.
 export default function ExtSettings() {
   const S = useStore(s => s.S)
   const ext = extOf(S)
   const checks = checksOf(ext), fields = fieldsOf(ext)
   const setCheck = (id, patch) => setExtIn('checks', id, patch)
+  const checksOn = layoutOf(ext, 'home').find(c => c.id === 'checks').on
   const fieldOptions = [...new Set([...(S.customMeasurements || []).map(c => c.name), ...Object.values(fields)])]
     .map(name => ({ value: name, label: (S.customMeasurements || []).some(c => c.name === name) ? name : `${name} ${L.noField}` }))
 
   return <>
-    <Section title={L.onHome} footer={L.onHomeFooter}>
-      <Row icon="checkCircle" iconTint="var(--orange)" title={L.checksCardTitle} subtitle={L.checksCardSub}>
-        <Switch aria-label={L.checksCardTitle} checked={ext.homeChecks} onChange={v => setExt({ homeChecks: v })} />
-      </Row>
-      <Row icon="sparkles" iconTint="var(--purple)" title={L.todayCardTitle} subtitle={L.todayCardSub}>
-        <Switch aria-label={L.todayCardTitle} checked={ext.homeToday} onChange={v => setExt({ homeToday: v })} />
-      </Row>
-      <Row icon="scale" iconTint="var(--green)" title={L.weightCardTitle} subtitle={L.weightCardSub}>
-        <Switch aria-label={L.weightCardTitle} checked={ext.homeWeight} onChange={v => setExt({ homeWeight: v })} />
-      </Row>
-      <Row icon="ruler" iconTint="var(--teal)" title={L.recentCardTitle} subtitle={L.recentCardSub}>
-        <Switch aria-label={L.recentCardTitle} checked={ext.homeRecent} onChange={v => setExt({ homeRecent: v })} />
-      </Row>
-    </Section>
+    <LayoutList ext={ext} where="home" title={L.onHome} footer={L.layoutHomeFooter} />
+    <LayoutList ext={ext} where="stats" title={L.statsTitle} footer={L.layoutStatsFooter} />
 
-    {ext.homeChecks && <Section title={L.checksSection} footer={L.checksFooter}>
+    {checksOn && <Section title={L.checksSection} footer={L.checksFooter}>
       {Object.keys(CHECKS).map(id => {
         const c = checks[id]
         return <div key={id}>
@@ -68,7 +95,7 @@ export default function ExtSettings() {
       })}
     </Section>}
 
-    {ext.homeChecks && <Section title={L.fieldsSection} footer={L.fieldsFooter}>
+    {checksOn && <Section title={L.fieldsSection} footer={L.fieldsFooter}>
       {Object.keys(fields).map(role => <SelectRow key={role} title={L.field[role]} value={fields[role]} options={fieldOptions}
         onChange={name => setExtIn('fields', role, name)} />)}
     </Section>}

@@ -86,5 +86,11 @@ export const L = {
   todayCardTitle: 'Karta „Dziś”',
   todayCardSub: 'Wniosek dnia, readiness i tempo masy z ptv4, wejście do Statystyk+.',
   homeTile: 'Analiza ptv4',
+  layoutHomeFooter: 'Przytrzymaj uchwyt, żeby zmienić kolejność kart. Wbudowaną kartę masy ciała wyłączysz w Wygląd i Start.',
+  layoutStatsFooter: 'Kolejność i widoczność sekcji Statystyk+; chipy włączają pojedyncze kafelki.',
+  moveSection: name => `Przesuń: ${name}`,
+  todayTiles: { takeaway: 'Wniosek dnia', readiness: 'Readiness', mass: 'Tempo masy' },
+  energyTiles: { tdeeCard: 'TDEE', weight: 'Waga', protein: 'Białko' },
+  numbersTiles: { tdee: 'TDEE', balAdapt: 'Bilans adapt.', balWatch: 'Bilans zegarek', protein: 'Białko', sleep: 'Sen', prs: 'Rekordy' },
   homeTileSub: 'TDEE, bilans, waga i białko liczone przez ptv4',
 }

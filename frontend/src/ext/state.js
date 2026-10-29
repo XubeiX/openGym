@@ -5,10 +5,8 @@ import { useStore } from '../store/useStore.js'
 
 export const EXT_DEFAULTS = {
   weightAvg: 0, // weight card: 0 = weigh-ins, 7 / 28 = MA7 / MA28 (lib/weight-ma.js)
-  homeWeight: true, // Home cards, switched in Settings → Dodatki
-  homeRecent: true,
-  homeChecks: true,
-  homeToday: true,
+  // layout: Home cards and Statystyki+ sections, order and switches (layout.js; it also reads the
+  // homeChecks / homeToday / homeWeight / homeRecent switches saved before it)
   // checks: { <id>: { on, days, after, everyDays } } and fields: { <role>: name } over lib/checks.js
   // CHECKS / FIELDS; snooze: the data-check card is hidden through this date
 }
