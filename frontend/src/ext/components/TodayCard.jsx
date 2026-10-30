@@ -2,15 +2,17 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '../../components/ui.jsx'
 import { usePtv4 } from '../lib/ptv4.js'
 import { L } from '../strings.js'
+import { nearestGoal } from '../lib/goals.js'
 
-// Home's "Dziś": ptv4's takeaway, today's Training Readiness, the 28-day mass rate and Body Battery, plus the way
+// Home's "Dziś": ptv4's takeaway, today's Training Readiness, the 28-day mass rate, Body Battery and the nearest goal, plus the way
 // into Statystyki+. All from the sidecar; offline, signed out or no ptv4 → the card is not there.
 export default function TodayCard({ tiles = {} }) {
   const nav = useNavigate()
-  const st = usePtv4(['kpi', 'garmin_kpi'])
+  const st = usePtv4(['kpi', 'garmin_kpi', 'goals'])
   const k = st.data?.kpi?.[0]
   if (!k) return null
   const g = st.data.garmin_kpi?.[0]
+  const goal = nearestGoal(st.data.goals)
   return <div className="card">
     <div className="row between" style={{ marginBottom: 6 }}>
       <h2 style={{ margin: 0 }}>{L.today}</h2>
@@ -32,6 +34,11 @@ export default function TodayCard({ tiles = {} }) {
         <div className="l">{L.bodyBattery}</div>
         <div className="v" style={{ fontSize: 22 }}>{g?.bb_txt ?? '–'}</div>
         <div className="small muted">{g?.bb_sub ?? L.noData}</div>
+      </div>}
+      {tiles.goal !== false && goal && <div className="tile" style={{ background: 'var(--surface-2)' }}>
+        <div className="l">{L.nearestGoal}</div>
+        <div className="v" style={{ fontSize: 22 }}>{L.goalStatus[goal.status] || goal.status}</div>
+        <div className="small muted">{goal.exercise}: {goal.goal}</div>
       </div>}
     </div>
     <div className="small muted" style={{ marginTop: 8 }}>{L.byPtv4}</div>

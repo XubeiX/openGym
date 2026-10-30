@@ -8,6 +8,7 @@ import ExtChart from '../components/ExtChart.jsx'
 import { L } from '../strings.js'
 import { layoutOf } from '../layout.js'
 import { extOf, setExtIn } from '../state.js'
+import { baseName } from '../lib/goals.js'
 
 // A chart's time window; a year at most, older is history.
 const RANGES = { '1M': 31, '3M': 92, '1Y': 365 }
@@ -196,6 +197,37 @@ function Strength({ lifts, summary }) {
   </div>
 }
 
+// Cele: each e1RM goal from S.ext.goals as ptv4 judges it: status, e1RM now against the target, the rate
+// it needs against the rate there is, and the last 16 weeks with a line to the target and ptv4's projection.
+const GOAL_COLOR = { 'osiągnięty': 'var(--green)', w_tempie: 'var(--green)', na_granicy: 'var(--yellow)', 'zagrożony': 'var(--red)' }
+function Goals({ goals, lifts }) {
+  if (!goals.length) return <div className="card muted small">{L.goalsNone}</div>
+  return goals.map(g => {
+    const rows = lifts.filter(r => baseName(r.exercise) === g.exercise && at(r.date) >= Date.now() - 112 * 86400000)
+      .sort((a, b) => a.date.localeCompare(b.date))
+    const last = rows.at(-1), end = at(g.deadline)
+    const line = (key, color, from, to) => ({ key, name: L.goalSeries[key], color, points: [from, to] })
+    const s = [series('e1rm', rows, 'date', 'e1rm', C.s1)]
+    if (last && g.target_e1rm) s.push(line('target', C.s2, { t: at(last.date), y: last.e1rm }, { t: end, y: g.target_e1rm }))
+    if (g.current_e1rm && g.projected_e1rm) s.push(line('proj', C.neutral, { t: Date.now(), y: g.current_e1rm }, { t: end, y: g.projected_e1rm }))
+    return <div key={g.exercise} className="card">
+      <div className="row between"><h3 style={{ margin: 0 }}>{g.exercise}</h3>
+        <span className="small" style={{ color: GOAL_COLOR[g.status], fontWeight: 600 }}>{L.goalStatus[g.status] || g.status}</span></div>
+      <div className="small muted" style={{ marginTop: 2 }}>{L.goalHead(g)}</div>
+      {g.target_e1rm && <>
+        <div className="tiles" style={{ gridTemplateColumns: 'repeat(3, 1fr)', margin: '10px 0' }}>
+          {[[L.goalNow, `${num(g.current_e1rm)} kg`], [L.goalNeed, L.pctWk(g.need_pct_wk), `${L.goalRate}: ${L.pctWk(g.rate_pct_wk)}`],
+            [L.goalProj, `${num(g.projected_e1rm)} kg`]].map(([l, v, sub]) =>
+            <div key={l} className="tile" style={{ background: 'var(--surface-2)' }}>
+              <div className="l">{l}</div><div className="v" style={{ fontSize: 18 }}>{v}</div>{sub && <div className="small muted">{sub}</div>}
+            </div>)}
+        </div>
+        <ExtChart h={180} unit="kg" series={s} />
+      </>}
+    </div>
+  })
+}
+
 // Objętość: fractional sets a week, muscle × the last 8 working blocks, in ptv4's bands.
 const VOLUME_BANDS = [[4, C.neutral, 0.35], [10, 'var(--yellow)', 0.35], [20.0001, 'var(--green)', 0.4], [Infinity, C.s1, 0.45]]
 function Volume({ rows }) {
@@ -241,7 +273,7 @@ function Daily({ body, tiles }) {
 // /ptv4: Statystyki+, ptv4's numbers in openGym.
 export default function Ptv4Stats() {
   const nav = useNavigate()
-  const st = usePtv4(['kpi', 'energy', 'body', 'garmin_kpi', 'garmin_daily', 'readiness', 'lifts', 'lift_summary', 'volume'], { fresh: true })
+  const st = usePtv4(['kpi', 'energy', 'body', 'garmin_kpi', 'garmin_daily', 'readiness', 'lifts', 'lift_summary', 'volume', 'goals'], { fresh: true })
   const ext = extOf(useStore(s => s.S))
   const layout = layoutOf(ext, 'stats')
   return <div className="ext-page">
@@ -256,6 +288,7 @@ export default function Ptv4Stats() {
       {sec.id === 'numbers' && (st.data.kpi[0] ? <Numbers k={st.data.kpi[0]} tiles={sec.tiles} /> : <div className="card muted small">{L.noData}</div>)}
       {sec.id === 'energy' && <Energy energy={st.data.energy} body={st.data.body} tiles={sec.tiles} />}
       {sec.id === 'strength' && <Strength lifts={st.data.lifts} summary={st.data.lift_summary} />}
+      {sec.id === 'goals' && <Goals goals={st.data.goals} lifts={st.data.lifts} />}
       {sec.id === 'volume' && <Volume rows={st.data.volume} />}
       {sec.id === 'daily' && <Daily body={st.data.body} tiles={sec.tiles} />}
       {sec.id === 'recovery' && <Recovery k={st.data.garmin_kpi[0]} daily={st.data.garmin_daily} perf={st.data.readiness} tiles={sec.tiles} />}

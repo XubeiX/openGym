@@ -8,6 +8,7 @@ import { layoutOf, withSection } from '../layout.js'
 import { CHECKS, checksOf, fieldsOf } from '../lib/checks.js'
 import { extOf, setExt, setExtIn } from '../state.js'
 import { L } from '../strings.js'
+import GoalsSettings from '../components/GoalsSettings.jsx'
 
 const HOURS = Array.from({ length: 24 }, (_, h) => ({ value: h, label: `${h}:00` }))
 const EVERY = [3, 5, 7, 10, 14, 30].map(n => ({ value: n, label: String(n) }))
@@ -32,6 +33,7 @@ const SECTIONS = {
     energy: { title: L.sections.energy, icon: 'flame', tint: 'var(--orange)', tiles: L.energyTiles },
     recovery: { title: L.sections.recovery, icon: 'heart', tint: 'var(--red)', tiles: L.recoveryTiles },
     strength: { title: L.sections.strength, icon: 'barbell', tint: 'var(--purple)' },
+    goals: { title: L.sections.goals, icon: 'target', tint: 'var(--red)' },
     volume: { title: L.sections.volume, icon: 'grid', tint: 'var(--teal)' },
     daily: { title: L.sections.daily, icon: 'calendar', tint: 'var(--green)', tiles: L.dailyTiles },
   },
@@ -72,6 +74,7 @@ export default function ExtSettings() {
   return <>
     <LayoutList ext={ext} where="home" title={L.onHome} footer={L.layoutHomeFooter} />
     <LayoutList ext={ext} where="stats" title={L.statsTitle} footer={L.layoutStatsFooter} />
+    <GoalsSettings ext={ext} />
 
     {checksOn && <Section title={L.checksSection} footer={L.checksFooter}>
       {Object.keys(CHECKS).map(id => {

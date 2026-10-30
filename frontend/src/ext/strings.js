@@ -1,5 +1,8 @@
 // Polish texts of the fork's extensions. Not in locales/: scripts/check-locales.mjs compares the
 // language packs and a key present in one only would fail upstream's CI.
+const num1 = v => v == null ? '–' : Number(v).toLocaleString('pl-PL', { maximumFractionDigits: 1 })
+const fmtDay = iso => new Date(iso + 'T12:00:00').toLocaleDateString('pl-PL', { day: 'numeric', month: 'numeric', year: 'numeric' })
+
 export const L = {
   weight: 'Waga',
   weighIns: 'Ważenia',
@@ -65,7 +68,7 @@ export const L = {
   loading: 'Pobieram dane z ptv4…',
   refreshing: 'Pokazuję ostatnie dane, sprawdzam nowsze…',
   ptv4Error: 'Nie udało się pobrać danych z ptv4',
-  sections: { numbers: 'Liczby', energy: 'Masa i energia', recovery: 'Regeneracja', strength: 'Siła', volume: 'Objętość', daily: 'Dzień po dniu' },
+  sections: { numbers: 'Liczby', energy: 'Masa i energia', recovery: 'Regeneracja', strength: 'Siła', goals: 'Cele', volume: 'Objętość', daily: 'Dzień po dniu' },
   tiles: {
     tdee: 'TDEE adaptacyjny, 28 dni', balAdapt: 'Bilans z TDEE adaptacyjnego, 28 dni', balWatch: 'Bilans z zegarka, 28 dni',
     protein: 'Białko, średnia tygodnia', sleep: 'Sen, średnia 7 dni', prs: 'Rekordy, ostatnie 28 dni',
@@ -91,7 +94,7 @@ export const L = {
   layoutHomeFooter: 'Przytrzymaj uchwyt, żeby zmienić kolejność kart. Wbudowaną kartę masy ciała wyłączysz w Wygląd i Start.',
   layoutStatsFooter: 'Kolejność i widoczność sekcji Statystyk+; chipy włączają pojedyncze kafelki.',
   moveSection: name => `Przesuń: ${name}`,
-  todayTiles: { takeaway: 'Wniosek dnia', readiness: 'Readiness', mass: 'Tempo masy', bb: 'Body Battery' },
+  todayTiles: { takeaway: 'Wniosek dnia', readiness: 'Readiness', mass: 'Tempo masy', bb: 'Body Battery', goal: 'Najbliższy cel' },
   energyTiles: { tdeeCard: 'TDEE', weight: 'Waga', protein: 'Białko' },
   numbersTiles: { tdee: 'TDEE', balAdapt: 'Bilans adapt.', balWatch: 'Bilans zegarek', protein: 'Białko', sleep: 'Sen', prs: 'Rekordy' },
   // Regeneracja (Etap 3)
@@ -121,6 +124,30 @@ export const L = {
   volumeBands: ['poniżej 4 (utrzymanie)', '4–10 (niska)', '10–20 (docelowa)', 'powyżej 20 (wysoka)'],
   sleepChart: 'Sen dziennie', stepsChart: 'Kroki dziennie',
   homeTileSub: 'TDEE, bilans, waga i białko liczone przez ptv4',
+  // cele e1RM (Etap 4d)
+  goalsSection: 'Cele',
+  goalsFooter: 'Cel to e1RM ćwiczenia do terminu. ptv4 liczy jego status w Statystykach+ i na karcie „Dziś”; zmiana dochodzi tam w ciągu kilku minut.',
+  goalsEmpty: 'Brak celów.',
+  goalLine: (e1rm, deadline) => `e1RM ${num1(e1rm)} kg do ${fmtDay(deadline)}`,
+  goalRemove: name => `Usuń cel: ${name}`,
+  goalNew: 'Nowy cel',
+  goalE1rm: 'e1RM',
+  goalDeadline: 'Termin',
+  goalAdd: 'Dodaj cel',
+  goalNoLifts: 'Lista ćwiczeń przychodzi z ptv4; bez połączenia z sidecarem nie dodasz celu.',
+  proposals: 'Propozycje ptv4',
+  proposalsFooter: 'Aktywne boje w progresie: obecne tempo (najwyżej 1% tygodniowo) przez około 10 tygodni.',
+  proposalLine: p => `e1RM ${num1(p.now_e1rm)} → ${num1(p.e1rm)} kg do ${fmtDay(p.deadline)} (ostatnio ${p.now})`,
+  goalsNone: 'Brak celów. Dodasz je w Ustawienia → Wygląd i Start → Dodatki → Cele.',
+  goalStatus: {
+    'osiągnięty': 'osiągnięty', w_tempie: 'w tempie', na_granicy: 'na granicy', 'zagrożony': 'zagrożony',
+    brak_danych: 'brak danych', 'nie_znaleziono_ćwiczenia': 'nie ma takiego ćwiczenia w danych',
+  },
+  goalNow: 'e1RM teraz', goalTarget: 'cel', goalNeed: 'potrzebne', goalRate: 'bieżące tempo', goalProj: 'projekcja na termin',
+  goalHead: g => `${g.goal} do ${fmtDay(g.deadline)}` + (g.weeks_left != null ? `, ${num1(g.weeks_left)} tyg.` : ''),
+  pctWk: v => v == null ? '–' : `${num1(v)}%/tydz.`,
+  goalSeries: { target: 'cel', proj: 'projekcja' },
+  nearestGoal: 'Najbliższy cel',
   // stan integracji (Etap 2b)
   healthTitle: 'Coś przestało działać',
   healthSection: 'Stan integracji',
