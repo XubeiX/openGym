@@ -35,6 +35,13 @@ export function usePtv4(sets, { fresh = false, persist = true } = {}) {
     return all.every(d => d != null) ? { data: Object.fromEntries(sets.map((s, i) => [s, all[i]])), stale: true } : { loading: true }
   }
   const [st, setSt] = useState(initial)
+  // a PWA left open overnight comes back without remounting: ask again when it is shown (ptv4() skips within 5 minutes)
+  const [shown, setShown] = useState(0)
+  useEffect(() => {
+    const on = () => document.visibilityState === 'visible' && setShown(n => n + 1)
+    document.addEventListener('visibilitychange', on)
+    return () => document.removeEventListener('visibilitychange', on)
+  }, [])
   useEffect(() => {
     let live = true
     Promise.all(sets.map(s => ptv4(s, fresh, persist))).then(
@@ -48,7 +55,7 @@ export function usePtv4(sets, { fresh = false, persist = true } = {}) {
         if (live) setSt(prev => prev.data && e?.status !== 401 && e?.status !== 403 ? { ...prev, stale: true } : { error: e?.message || String(e), status: e?.status })
       })
     return () => { live = false }
-  }, [key]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [key, shown]) // eslint-disable-line react-hooks/exhaustive-deps
   return st
 }
 

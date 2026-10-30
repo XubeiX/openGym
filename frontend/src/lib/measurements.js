@@ -28,9 +28,10 @@ export const MEASUREMENT_KEYS = MEASUREMENT_FIELDS.map(f => f.key)
 export const DEFAULT_MEASUREMENT_KEYS = MEASUREMENT_FIELDS.filter(f => !f.optional).map(f => f.key)
 
 const round = n => Math.round(n * 10) / 10
+const round2 = n => Math.round(n * 100) / 100 // ext: unitless fields (sleep in hours) keep 0.01
 const valid = (v, unit) => v != null && v !== '' && Number.isFinite(+v) &&
   (unit === '%' ? +v >= 0 && +v <= 100 : unit === 'none' ? +v >= 0 : +v > 0)
-  ? (unit === 'kg' || unit === 'lb' ? Math.round(+v * 1000) / 1000 : round(+v)) : null
+  ? (unit === 'kg' || unit === 'lb' ? Math.round(+v * 1000) / 1000 : unit === 'none' ? round2(+v) : round(+v)) : null // ext: none to 0.01
 const LB_PER_KG = 2.2046226218
 export const CUSTOM_MEASUREMENT_UNITS = ['cm', 'in', '%', 'kg', 'lb', 'none']
 const unitOf = field => CUSTOM_MEASUREMENT_UNITS.includes(field?.unit) ? field.unit : null
@@ -45,7 +46,7 @@ export const measurementUnit = (unit, field) => field?.key === 'bodyFat' ? '%' :
 export const toMeasurementDisplay = (value, unit, field) => {
   if (value == null) return null
   const display = measurementUnit(unit, field)
-  return round(display === 'in' ? value / 2.54 : display === 'lb' ? value * LB_PER_KG : value)
+  return display === 'none' ? round2(value) : round(display === 'in' ? value / 2.54 : display === 'lb' ? value * LB_PER_KG : value) // ext: sleep 6.57 h
 }
 export const fromMeasurementDisplay = (value, unit, field) => {
   const display = measurementUnit(unit, field)

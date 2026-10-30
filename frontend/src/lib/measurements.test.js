@@ -166,4 +166,11 @@ describe('custom measurement units (#699)', () => {
     ] })
     expect(s.measurements[0].other[0]).toEqual({ id: 'mass', name: 'Mass', value: 60, unit: 'kg' })
   })
+
+  it('keeps a unitless reading to 0.01 (ext: sleep 6.57 h)', () => {
+    const sleep = { id: 'sleep', name: 'Sen (h)', unit: 'none' }
+    expect(toMeasurementDisplay(6.5667, 'kg', sleep)).toBe(6.57)
+    expect(fromMeasurementDisplay('6.57', 'kg', sleep)).toBe(6.57)
+    expect(toMeasurementDisplay(84.04, 'kg', { id: 'w', name: 'Waist', unit: 'cm' })).toBe(84)
+  })
 })
