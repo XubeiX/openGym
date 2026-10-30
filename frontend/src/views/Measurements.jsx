@@ -9,7 +9,7 @@ import {
   toMeasurementDisplay, normalizeMeasurementsState, CUSTOM_MEASUREMENT_UNITS, customMeasurementUnits,
   measurementUnitLabel, zeroIsReading,
 } from '../lib/measurements.js'
-import { fmtDate, fmtNum, todayISO, uid } from '../lib/format.js'
+import { fmtDate, fmtNum, fmtPlate, todayISO, uid } from '../lib/format.js'
 import { t } from '../lib/i18n.js'
 import LineChart from '../components/LineChart.jsx'
 import Icon from '../components/Icon.jsx'
@@ -23,7 +23,8 @@ const toast = message => useUI.getState().toast(message)
 // The label after a number: empty for a unitless field (#718).
 const fieldUnit = (field, profileUnit) => measurementUnitLabel(measurementUnit(profileUnit, field))
 const unitOptions = units => units.map(value => ({ value, label: value === 'none' ? t('No unit') : value }))
-const withUnit = (value, unit) => unit ? fmtNum(value) + ' ' + unit : fmtNum(value)
+export const fmtValue = (value, unit) => unit ? fmtNum(value) : fmtPlate(value) // ext: unitless (sleep 6.57 h) to 0.01
+const withUnit = (value, unit) => unit ? fmtNum(value) + ' ' + unit : fmtValue(value)
 export const shownValue = (entry, field, profileUnit) => { // ext: RecentMeasurementsCard
   const value = measurementValue(entry, field.key)
   if (value == null) return null
@@ -224,7 +225,7 @@ export default function Measurements() {
       <div className="row between" style={{ marginBottom: 10 }}>
         <div>
           <div className="muted small">{field ? t(field.label) : t('Body measurements')}</div>
-          <div className="big" style={{ marginTop: 3 }}>{latest ? <>{fmtNum(latest.y)} <span className="muted" style={{ fontSize: '1rem' }}>{unit}</span></> : '–'}</div>
+          <div className="big" style={{ marginTop: 3 }}>{latest ? <>{fmtValue(latest.y, unit)} <span className="muted" style={{ fontSize: '1rem' }}>{unit}</span></> : '–'}</div>
           {delta != null && delta !== 0 && <div className="small" style={{ marginTop: 3, color: 'var(--label-2)' }}>{delta > 0 ? '+' : ''}{withUnit(delta, unit)} {t('since previous')}</div>}
         </div>
         <Button size="sm" icon="plus" onClick={() => measurementLogSheet()}>{t('Log')}</Button>

@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../store/useStore.js'
-import { fmtDate, fmtNum, todayISO } from '../../lib/format.js'
+import { fmtDate, todayISO } from '../../lib/format.js'
 import { t } from '../../lib/i18n.js'
-import { enabledMeasurementFields } from '../../lib/measurements.js'
-import { measurementLogSheet, shownValue } from '../../views/Measurements.jsx'
+import { enabledMeasurementFields, measurementUnit, measurementUnitLabel } from '../../lib/measurements.js'
+import { fmtValue, measurementLogSheet, shownValue } from '../../views/Measurements.jsx'
 import { tappable } from '../../lib/use-sheet-keyboard.js'
 import { Button } from '../../components/ui.jsx'
 import Icon from '../../components/Icon.jsx'
@@ -28,7 +28,7 @@ export default function RecentMeasurementsCard() {
       <b>{fmtDate(d, true)}</b>
       <span className="measure-day-v">{fields.map(f => {
         const v = shownValue(entry, f, S.unit)
-        return <span key={f.key} className={v == null ? 'dim' : ''}>{t(f.label)} <b>{v == null ? '–' : fmtNum(v)}</b></span>
+        return <span key={f.key} className={v == null ? 'dim' : ''}>{t(f.label)} <b>{v == null ? '–' : fmtValue(v, measurementUnitLabel(measurementUnit(S.unit, f)))}</b></span>
       })}</span>
       <Icon name="pencil" className="chev" />
     </div>)}
