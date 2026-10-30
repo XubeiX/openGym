@@ -97,10 +97,74 @@ function Energy({ energy, body, tiles }) {
   </>
 }
 
+// Regeneracja: the watch's tiles (garmin_kpi) and day-by-day charts (garmin_daily: HRV 7-day mean and
+// norm band, the resting-HR norm, all from ptv4), then Etap 3's "Readiness a wynik" (readiness).
+function Recovery({ k, daily, perf, tiles }) {
+  const rr = useRange('readiness'), rh = useRange('hrv'), rt = useRange('rhr')
+  const dR = since(daily, 'date', RANGES[rr]), dH = since(daily, 'date', RANGES[rh]), dT = since(daily, 'date', RANGES[rt])
+  const int = v => Math.round(v).toLocaleString('pl-PL')
+  const kpi = { readiness: [k?.ready_txt, k?.ready_sub], hrv: [k?.hrv_txt, k?.hrv_sub], rhr: [k?.rhr_txt, k?.rhr_sub], bb: [k?.bb_txt, k?.bb_sub] }
+  const card = (id, title, note, chart) => tiles[id] !== false && <div className="card">
+    <div className="row between"><h2 style={{ margin: 0 }}>{title}</h2><span className="small muted">{L.byPtv4}</span></div>
+    <div className="small muted" style={{ marginTop: 4 }}>{note}</div>
+    <div style={{ marginTop: 10 }}>{chart}</div>
+  </div>
+  const hrvBand = { key: 'hrvNorm', name: L.series.hrvNorm, color: C.neutral,
+    points: dH.filter(r => r.hrv_norm_lo != null).map(r => ({ t: at(r.date), lo: r.hrv_norm_lo, hi: r.hrv_norm_hi })) }
+  return <>
+    {k && <div className="ext-tiles">
+      {Object.entries(kpi).filter(([id]) => tiles[id] !== false).map(([id, [v, sub]]) => <Tile key={id} label={L.recTiles[id]} value={v ?? '–'} sub={sub} />)}
+    </div>}
+    {card('readiness', L.readyChart, L.readyNote, <>
+      <RangeSwitch id="readiness" value={rr} />
+      <ExtChart h={180} fmt={int} series={[series('readiness', dR, 'date', 'readiness', C.s1)]} />
+    </>)}
+    {card('hrv', L.hrvChart, L.hrvNote, <>
+      <RangeSwitch id="hrv" value={rh} />
+      <ExtChart h={200} unit="ms" fmt={int} bands={[hrvBand]}
+        series={[series('night', dH, 'date', 'hrv', C.neutral, 'dots'), series('hrv7', dH, 'date', 'hrv_7d', C.s1)]} />
+    </>)}
+    {card('rhr', L.rhrChart, L.rhrNote, <>
+      <RangeSwitch id="rhr" value={rt} />
+      <ExtChart h={180} unit="ud./min" fmt={int} series={[series('rhr', dT, 'date', 'rhr', C.s1), series('rhrNorm', dT, 'date', 'rhr_norm', C.s2)]} />
+    </>)}
+    {tiles.perf !== false && <Perf rows={perf} />}
+  </>
+}
+
+// Readiness a wynik (Etap 3): the session index by readiness and sleep band, and its rank correlation
+// with each watch metric, all from ptv4's readiness_perf. Below 20 sessions only "zbieram dane".
+function Perf({ rows }) {
+  const sum = rows.find(r => r.kind === 'summary')
+  const buckets = rows.filter(r => r.kind === 'bucket'), corr = rows.filter(r => r.kind === 'corr')
+  const num = (v, d = 1) => v == null ? '–' : v.toLocaleString('pl-PL', { minimumFractionDigits: d, maximumFractionDigits: d })
+  const width = v => Math.max(4, Math.min(100, (v - 80) / 25 * 100)) // index 80–105 across the bar
+  return <div className="card">
+    <div className="row between"><h2 style={{ margin: 0 }}>{L.perfTitle}</h2><span className="small muted">{L.byPtv4}</span></div>
+    <div className="small muted" style={{ marginTop: 4 }}>{L.perfNote}</div>
+    <div className="small" style={{ marginTop: 8 }}>{sum?.txt ?? L.noData}</div>
+    {sum?.enough && <>
+      <div style={{ marginTop: 10, display: 'grid', gap: 6 }}>
+        {buckets.map(b => <div key={b.label} className="small">
+          <div className="row between"><span>{b.label}</span><span><b>{num(b.index)}</b> <span className="muted">· {L.sessionsN(b.n)}</span></span></div>
+          {b.index != null && <div style={{ height: 6, borderRadius: 3, background: 'var(--surface-2)', marginTop: 3 }}>
+            <div style={{ width: width(b.index) + '%', height: '100%', borderRadius: 3, background: b.metric === 'sleep_h' ? C.s2 : C.s1 }} />
+          </div>}
+        </div>)}
+      </div>
+      <div className="small" style={{ marginTop: 12 }}><b>{L.perfCorr}</b></div>
+      {corr.map(c => <div key={c.metric} className="row between small" style={{ marginTop: 4 }}>
+        <span>{L.perfMetric[c.metric]}</span><span>{num(c.rho, 2)} <span className="muted">· n={c.n}</span></span>
+      </div>)}
+    </>}
+    <div className="small muted" style={{ marginTop: 10 }}>{L.perfCaveat}</div>
+  </div>
+}
+
 // /ptv4: Statystyki+, ptv4's numbers in openGym.
 export default function Ptv4Stats() {
   const nav = useNavigate()
-  const st = usePtv4(['kpi', 'energy', 'body'], { fresh: true })
+  const st = usePtv4(['kpi', 'energy', 'body', 'garmin_kpi', 'garmin_daily', 'readiness'], { fresh: true })
   const ext = extOf(useStore(s => s.S))
   const layout = layoutOf(ext, 'stats')
   return <div className="ext-page">
@@ -114,6 +178,7 @@ export default function Ptv4Stats() {
       <h2 className="ext-sec">{L.sections[sec.id]}</h2>
       {sec.id === 'numbers' && (st.data.kpi[0] ? <Numbers k={st.data.kpi[0]} tiles={sec.tiles} /> : <div className="card muted small">{L.noData}</div>)}
       {sec.id === 'energy' && <Energy energy={st.data.energy} body={st.data.body} tiles={sec.tiles} />}
+      {sec.id === 'recovery' && <Recovery k={st.data.garmin_kpi[0]} daily={st.data.garmin_daily} perf={st.data.readiness} tiles={sec.tiles} />}
     </div>)}
   </div>
 }

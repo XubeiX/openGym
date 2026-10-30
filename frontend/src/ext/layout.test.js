@@ -27,7 +27,7 @@ describe('layoutOf', () => {
   it('a section or tile new to the registry joins at the end, switched on; an unknown id is dropped', () => {
     const ext = { layout: { stats: [{ id: 'energy', on: true, tiles: { weight: false } }, { id: 'gone', on: true, tiles: {} }] } }
     const l = layoutOf(ext, 'stats')
-    expect(ids(l)).toEqual(['energy', 'numbers'])
+    expect(ids(l)).toEqual(['energy', 'numbers', 'recovery'])
     expect(l[0].tiles).toEqual({ tdeeCard: true, weight: false, protein: true })
     expect(l[1].on).toBe(true)
   })

@@ -12,6 +12,7 @@ export const REGISTRY = {
   stats: [
     { id: 'numbers', tiles: ['tdee', 'balAdapt', 'balWatch', 'protein', 'sleep', 'prs'] },
     { id: 'energy', tiles: ['tdeeCard', 'weight', 'protein'] },
+    { id: 'recovery', tiles: ['readiness', 'hrv', 'rhr', 'bb', 'perf'] },
   ],
 }
 
