@@ -26,15 +26,13 @@
 @media (min-width:900px){.ext-tiles{grid-template-columns:repeat(3,1fr)}}
 .ext-tiles .tile .v{font-size:22px}
 .ext-health{border:1px solid var(--red)}
-/* Statystyki+ tables (Siła, Objętość, Dzień po dniu): scroll sideways inside the card on a phone */
+/* Objętość's table: scrolls sideways inside the card on a phone */
 .ext-table{overflow-x:auto}
 .ext-table table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
 .ext-table th{font-weight:600;font-size:12px;color:var(--label-2);text-align:left;padding:6px;white-space:nowrap}
 .ext-table td{padding:6px;border-top:1px solid var(--sep);white-space:nowrap}
 .ext-table .num{text-align:right}
 .ext-table td:first-child{white-space:normal;min-width:76px}
-.ext-table td.muted{color:var(--label-3)}
-.ext-table tbody tr.on td{background:var(--surface-2)}
 .ext-heat td.num{position:relative;text-align:center;min-width:44px}
 .ext-heat td i{position:absolute;inset:2px;border-radius:4px}
 .ext-heat td span{position:relative}
