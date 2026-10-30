@@ -20,14 +20,14 @@ describe('layoutOf', () => {
     let ext = { layout: { home: withSection({}, 'home', 'today', { tiles: { readiness: false } }) } }
     ext = { layout: { home: withSection(ext, 'home', 'recent', { on: false }) } }
     const l = layoutOf(ext, 'home')
-    expect(l.find(s => s.id === 'today').tiles).toEqual({ takeaway: true, readiness: false, mass: true })
+    expect(l.find(s => s.id === 'today').tiles).toEqual({ takeaway: true, readiness: false, mass: true, bb: true })
     expect(l.find(s => s.id === 'recent').on).toBe(false)
   })
 
   it('a section or tile new to the registry joins at the end, switched on; an unknown id is dropped', () => {
     const ext = { layout: { stats: [{ id: 'energy', on: true, tiles: { weight: false } }, { id: 'gone', on: true, tiles: {} }] } }
     const l = layoutOf(ext, 'stats')
-    expect(ids(l)).toEqual(['energy', 'numbers', 'recovery'])
+    expect(ids(l)).toEqual(['energy', 'numbers', 'recovery', 'strength', 'volume', 'daily'])
     expect(l[0].tiles).toEqual({ tdeeCard: true, weight: false, protein: true })
     expect(l[1].on).toBe(true)
   })

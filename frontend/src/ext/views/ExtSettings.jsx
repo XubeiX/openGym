@@ -31,6 +31,9 @@ const SECTIONS = {
     numbers: { title: L.sections.numbers, icon: 'chartLine', tint: 'var(--blue)', tiles: L.numbersTiles },
     energy: { title: L.sections.energy, icon: 'flame', tint: 'var(--orange)', tiles: L.energyTiles },
     recovery: { title: L.sections.recovery, icon: 'heart', tint: 'var(--red)', tiles: L.recoveryTiles },
+    strength: { title: L.sections.strength, icon: 'barbell', tint: 'var(--purple)', tiles: L.strengthTiles },
+    volume: { title: L.sections.volume, icon: 'grid', tint: 'var(--teal)' },
+    daily: { title: L.sections.daily, icon: 'calendar', tint: 'var(--green)', tiles: L.dailyTiles },
   },
 }
 

@@ -5,7 +5,7 @@
 export const REGISTRY = {
   home: [
     { id: 'checks', tiles: [] },
-    { id: 'today', tiles: ['takeaway', 'readiness', 'mass'] },
+    { id: 'today', tiles: ['takeaway', 'readiness', 'mass', 'bb'] },
     { id: 'weight', tiles: [] },
     { id: 'recent', tiles: [] },
   ],
@@ -13,6 +13,9 @@ export const REGISTRY = {
     { id: 'numbers', tiles: ['tdee', 'balAdapt', 'balWatch', 'protein', 'sleep', 'prs'] },
     { id: 'energy', tiles: ['tdeeCard', 'weight', 'protein'] },
     { id: 'recovery', tiles: ['readiness', 'hrv', 'rhr', 'bb', 'perf'] },
+    { id: 'strength', tiles: ['lift', 'table'] },
+    { id: 'volume', tiles: [] },
+    { id: 'daily', tiles: ['sleep', 'steps', 'table'] },
   ],
 }
 

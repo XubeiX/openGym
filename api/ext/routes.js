@@ -9,7 +9,7 @@
 const SETS = {
   lifts: 'dashboard/lifts', body: 'dashboard/body', energy: 'dashboard/energy', volume: 'dashboard/volume',
   goals: 'dashboard/goals', pain: 'dashboard/pain', kpi: 'dashboard/kpi', garmin_kpi: 'dashboard/garmin_kpi',
-  garmin_daily: 'dashboard/garmin_daily', readiness: 'dashboard/readiness',
+  garmin_daily: 'dashboard/garmin_daily', readiness: 'dashboard/readiness', lift_summary: 'dashboard/lift_summary',
   'raw-measurements': 'raw/measurements', 'raw-garmin': 'raw/garmin',
   health: 'health' // Etap 2b: Garmin, Fitatu and backups, judged by the sidecar
 };

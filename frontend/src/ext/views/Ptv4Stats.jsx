@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../store/useStore.js'
 import Icon from '../../components/Icon.jsx'
-import { Segmented } from '../../components/ui.jsx'
+import { Segmented, SelectRow } from '../../components/ui.jsx'
 import { usePtv4, at } from '../lib/ptv4.js'
 import ExtChart from '../components/ExtChart.jsx'
 import { L } from '../strings.js'
@@ -161,10 +162,104 @@ function Perf({ rows }) {
   </div>
 }
 
+const Head = ({ title, note }) => <>
+  <div className="row between"><h2 style={{ margin: 0 }}>{title}</h2><span className="small muted">{L.byPtv4}</span></div>
+  {note && <div className="small muted" style={{ marginTop: 4 }}>{note}</div>}
+</>
+const num = (v, d = 1, fixed = false) => v == null ? '–' : v.toLocaleString('pl-PL', { minimumFractionDigits: fixed ? d : 0, maximumFractionDigits: d })
+
+// Siła: e1RM of one exercise over time (lifts, PRs as dots) and every active exercise with its
+// 8-week change (lift_summary); a row of the table picks the chart's exercise.
+function Strength({ lifts, summary, tiles }) {
+  const names = summary.length ? summary.map(r => r.exercise) : [...new Set(lifts.map(r => r.exercise))]
+  const [picked, setPicked] = useState(null)
+  const pick = names.includes(picked) ? picked : names[0]
+  const rr = useRange('lift')
+  const rows = since(lifts.filter(r => r.exercise === pick), 'date', RANGES[rr])
+  const chg = v => v == null ? undefined : v > 1 ? 'var(--green)' : v < -2 ? 'var(--red)' : undefined
+  return <>
+    {tiles.lift !== false && pick && <div className="card">
+      <Head title={L.liftChart} note={L.liftNote} />
+      <div className="sect-b measure-select" style={{ marginTop: 10 }}>
+        <SelectRow title={L.exercise} sheetTitle={L.chooseExercise} value={pick} onChange={setPicked}
+          options={names.map(n => ({ value: n, label: n }))} search={{ match: (o, q) => o.label.toLowerCase().includes(q.toLowerCase()) }} />
+      </div>
+      <RangeSwitch id="lift" value={rr} />
+      <ExtChart h={200} unit="kg" series={[series('e1rm', rows, 'date', 'e1rm', C.s1), series('pr', rows.filter(r => r.pr), 'date', 'e1rm', C.s2, 'dots')]} />
+    </div>}
+    {tiles.table !== false && summary.length > 0 && <div className="card">
+      <Head title={L.liftTable} note={L.liftTableNote} />
+      <div className="ext-table" style={{ marginTop: 10 }}><table>
+        <thead><tr><th>{L.colExercise}</th><th className="num">{L.colE1rm}</th><th className="num">{L.col8wk}</th><th className="num">{L.colPrs}</th></tr></thead>
+        <tbody>{summary.map(r => <tr key={r.exercise} className={r.exercise === pick ? 'on' : ''} onClick={() => setPicked(r.exercise)}>
+          <td>{r.exercise}</td><td className="num">{r.last_txt}</td><td className="num" style={{ color: chg(r.chg8) }}>{r.chg8_txt}</td><td className="num">{r.prs}</td>
+        </tr>)}</tbody>
+      </table></div>
+    </div>}
+  </>
+}
+
+// Objętość: fractional sets a week, muscle × the last 8 working blocks, in ptv4's bands.
+const VOLUME_BANDS = [[4, C.neutral, 0.35], [10, 'var(--yellow)', 0.35], [20.0001, 'var(--green)', 0.4], [Infinity, C.s1, 0.45]]
+function Volume({ rows }) {
+  const blocks = [...new Set(rows.filter(r => !r.deload).map(r => r.block))].slice(-8)
+  const shown = rows.filter(r => blocks.includes(r.block))
+  const avg = m => shown.filter(r => r.muscle === m).reduce((a, r) => a + r.sets_wk, 0)
+  const muscles = [...new Set(shown.map(r => r.muscle))].sort((a, b) => avg(b) - avg(a))
+  const band = v => VOLUME_BANDS.find(([max]) => v < max)
+  if (!blocks.length) return <div className="card muted small">{L.noData}</div>
+  return <div className="card">
+    <Head title={L.volumeTitle} note={L.volumeNote} />
+    <div className="ext-table ext-heat" style={{ marginTop: 10 }}><table>
+      <thead><tr><th />{blocks.map(b => <th key={b} className="num">{b}</th>)}</tr></thead>
+      <tbody>{muscles.map(m => <tr key={m}><td>{m}</td>{blocks.map(b => {
+        const r = shown.find(x => x.block === b && x.muscle === m), v = r ? r.sets_wk : 0, [, color, op] = band(v)
+        return <td key={b} className="num" title={r ? `${m}, ${b}: ${num(v)} serii/tydz., ${num(r.freq_wk)} bodźca/tydz.` : undefined}>
+          <i style={{ background: color, opacity: op }} /><span>{r ? num(v, v < 10 ? 1 : 0) : ''}</span>
+        </td>
+      })}</tr>)}</tbody>
+    </table></div>
+    <div className="ext-legend" style={{ marginTop: 10 }}>{L.volumeBands.map((n, i) => <span key={n}><i className="sq" style={{ background: VOLUME_BANDS[i][1], opacity: VOLUME_BANDS[i][2] + 0.3 }} />{n}</span>)}</div>
+  </div>
+}
+
+// Dzień po dniu: sleep and steps by day, and the last 30 days of entries; a weigh-in ptv4 flags
+// as off its 7-day mean in orange.
+const DAILY_COLS = ['weight', 'waist', 'eat', 'burn', 'sleep', 'steps', 'protein', 'fat', 'carbs']
+const DAILY_DEC = { weight: 1, waist: 1, sleep: 2 }
+function Daily({ body, tiles }) {
+  const rs = useRange('sleep'), rt = useRange('steps')
+  const int = v => Math.round(v).toLocaleString('pl-PL')
+  return <>
+    {tiles.sleep !== false && <div className="card">
+      <Head title={L.sleepChart} />
+      <div style={{ marginTop: 10 }}><RangeSwitch id="sleep" value={rs} />
+        <ExtChart h={180} unit="h" series={[series('sleep', since(body, 'date', RANGES[rs]), 'date', 'sleep', C.s1)]} /></div>
+    </div>}
+    {tiles.steps !== false && <div className="card">
+      <Head title={L.stepsChart} />
+      <div style={{ marginTop: 10 }}><RangeSwitch id="steps" value={rt} />
+        <ExtChart h={180} fmt={int} series={[series('steps', since(body, 'date', RANGES[rt]), 'date', 'steps', C.s2)]} /></div>
+    </div>}
+    {tiles.table !== false && <div className="card">
+      <Head title={L.dailyTable} note={L.dailyNote} />
+      <div className="ext-table" style={{ marginTop: 10 }}><table>
+        <thead><tr><th>{L.cols.date}</th>{DAILY_COLS.map(c => <th key={c} className="num">{L.cols[c]}</th>)}</tr></thead>
+        <tbody>{body.slice(-30).reverse().map(r => <tr key={r.date}>
+          <td>{new Date(r.date + 'T12:00:00').toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}</td>
+          {DAILY_COLS.map(c => <td key={c} className={'num' + (r[c] == null ? ' muted' : '')}
+            style={c === 'weight' && r.weight_outlier ? { color: 'var(--orange)' } : undefined}
+            title={c === 'weight' && r.weight_outlier ? L.prior7(num(r.weight_prior7, 2)) : undefined}>{num(r[c], DAILY_DEC[c] ?? 0, c === 'weight')}</td>)}
+        </tr>)}</tbody>
+      </table></div>
+    </div>}
+  </>
+}
+
 // /ptv4: Statystyki+, ptv4's numbers in openGym.
 export default function Ptv4Stats() {
   const nav = useNavigate()
-  const st = usePtv4(['kpi', 'energy', 'body', 'garmin_kpi', 'garmin_daily', 'readiness'], { fresh: true })
+  const st = usePtv4(['kpi', 'energy', 'body', 'garmin_kpi', 'garmin_daily', 'readiness', 'lifts', 'lift_summary', 'volume'], { fresh: true })
   const ext = extOf(useStore(s => s.S))
   const layout = layoutOf(ext, 'stats')
   return <div className="ext-page">
@@ -178,6 +273,9 @@ export default function Ptv4Stats() {
       <h2 className="ext-sec">{L.sections[sec.id]}</h2>
       {sec.id === 'numbers' && (st.data.kpi[0] ? <Numbers k={st.data.kpi[0]} tiles={sec.tiles} /> : <div className="card muted small">{L.noData}</div>)}
       {sec.id === 'energy' && <Energy energy={st.data.energy} body={st.data.body} tiles={sec.tiles} />}
+      {sec.id === 'strength' && <Strength lifts={st.data.lifts} summary={st.data.lift_summary} tiles={sec.tiles} />}
+      {sec.id === 'volume' && <Volume rows={st.data.volume} />}
+      {sec.id === 'daily' && <Daily body={st.data.body} tiles={sec.tiles} />}
       {sec.id === 'recovery' && <Recovery k={st.data.garmin_kpi[0]} daily={st.data.garmin_daily} perf={st.data.readiness} tiles={sec.tiles} />}
     </div>)}
   </div>

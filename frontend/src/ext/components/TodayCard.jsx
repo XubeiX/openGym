@@ -3,7 +3,7 @@ import { Button } from '../../components/ui.jsx'
 import { usePtv4 } from '../lib/ptv4.js'
 import { L } from '../strings.js'
 
-// Home's "Dziś": ptv4's takeaway, today's Training Readiness and the 28-day mass rate, plus the way
+// Home's "Dziś": ptv4's takeaway, today's Training Readiness, the 28-day mass rate and Body Battery, plus the way
 // into Statystyki+. All from the sidecar; offline, signed out or no ptv4 → the card is not there.
 export default function TodayCard({ tiles = {} }) {
   const nav = useNavigate()
@@ -27,6 +27,11 @@ export default function TodayCard({ tiles = {} }) {
         <div className="l">{L.massRate}</div>
         <div className="v" style={{ fontSize: 22 }}>{k.pct_wk_txt}</div>
         <div className="small muted">{L.massRateSub}</div>
+      </div>}
+      {tiles.bb !== false && <div className="tile" style={{ background: 'var(--surface-2)' }}>
+        <div className="l">{L.bodyBattery}</div>
+        <div className="v" style={{ fontSize: 22 }}>{g?.bb_txt ?? '–'}</div>
+        <div className="small muted">{g?.bb_sub ?? L.noData}</div>
       </div>}
     </div>
     <div className="small muted" style={{ marginTop: 8 }}>{L.byPtv4}</div>
