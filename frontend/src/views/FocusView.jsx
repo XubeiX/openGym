@@ -21,6 +21,7 @@ import { ownedWeightsFor, stepOwned } from '../lib/dumbbells.js'
 import Icon from '../components/Icon.jsx'
 import { Button, Stepper } from '../components/ui.jsx'
 import './FocusView.css'
+import CoachTip from '../ext/components/CoachTip.jsx' // ext
 
 const firstIncomplete = entry => {
   const index = entry.sets.findIndex(set => !set.done)
@@ -289,6 +290,7 @@ export default function FocusView({
         {entry.note && <div className="focus-note">{entry.note}</div>}
         {last && <div className="focus-last">{t('Last time')} · {fmtDate(last.d)}</div>}
         {guidance && <button className="focus-guidance" onClick={onProgressionSettings}><Icon name="lightbulb" />{t(guidance.policyLabel)}</button>}
+        <CoachTip entry={entry} className="focus-guidance" />{/* ext */}
       </div>
       <Prescription entry={entry} setIdx={setIdx} unit={S.unit} fallbackRest={S.restSec}>
         <PlanBadge entry={entry} mode={mode} />

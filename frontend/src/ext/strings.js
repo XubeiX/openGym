@@ -4,6 +4,7 @@ const num1 = v => v == null ? '–' : Number(v).toLocaleString('pl-PL', { maximu
 const fmtDay = iso => new Date(iso + 'T12:00:00').toLocaleDateString('pl-PL', { day: 'numeric', month: 'numeric', year: 'numeric' })
 
 export const L = {
+  coachTip: 'ptv4',
   weight: 'Waga',
   weighIns: 'Ważenia',
   log: 'Dodaj',
