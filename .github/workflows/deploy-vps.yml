@@ -1,0 +1,65 @@
+# Fork only (XubeiX/openGym): a push to `vps` tests and deploys to the VPS. Upstream has no such
+# branch, so this never runs there. The VPS side (`gymhub-deploy`, setup, rollback) lives in the ptv4
+# repo, vps/. Secrets: VPS_HOST, VPS_SSH_KEY (key restricted to `gymhub-deploy opengym`),
+# VPS_KNOWN_HOSTS.
+name: Deploy VPS
+
+on:
+  push:
+    branches: [vps]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  test:
+    if: github.repository == 'XubeiX/openGym'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Installs as in test.yml: mcp's log_workout test drives the real api, so it needs api's deps too.
+    strategy:
+      matrix:
+        include:
+          - app: frontend
+            install: npm ci --ignore-scripts --no-audit --no-fund
+          - app: api
+            install: npm ci --omit=optional --no-audit --no-fund
+          - app: mcp
+            install: npm ci --no-audit --no-fund && (cd ../api && npm ci --omit=optional --no-audit --no-fund)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            ${{ matrix.app }}/package-lock.json
+            api/package-lock.json
+      - run: ${{ matrix.install }}
+        working-directory: ${{ matrix.app }}
+      - run: npm test
+        working-directory: ${{ matrix.app }}
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # The key can only run the deploy script (forced command); its output is this log.
+      - name: Deploy on the VPS
+        env:
+          KEY: ${{ secrets.VPS_SSH_KEY }}
+          KNOWN: ${{ secrets.VPS_KNOWN_HOSTS }}
+          HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN" > ~/.ssh/known_hosts
+          ssh -o BatchMode=yes "root@$HOST"
