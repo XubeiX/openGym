@@ -8,7 +8,10 @@ import { useEffect, useState } from 'react'
 import { api } from '../../lib/api.js'
 
 const KEY = set => 'ext_ptv4_' + set
-const stored = set => { try { return JSON.parse(localStorage.getItem(KEY(set)))?.data ?? null } catch { return null } }
+const saved = set => { try { return JSON.parse(localStorage.getItem(KEY(set))) } catch { return null } }
+const stored = set => saved(set)?.data ?? null
+// when the oldest of these sets was last answered (ms), or undefined
+const storedAt = sets => { const t = sets.map(s => saved(s)?.at); return t.every(Boolean) ? Math.min(...t) : undefined }
 const store = (set, data) => { try { localStorage.setItem(KEY(set), JSON.stringify({ at: Date.now(), data })) } catch { /* full or blocked: next open fetches */ } }
 
 // One request per set at a time, and none again within 5 minutes unless `fresh`.
@@ -25,14 +28,15 @@ export function ptv4(set, fresh = false, persist = true) {
   return entry.p
 }
 
-// { data: { <set>: rows } } from the stored answers at once (or { loading }), then the fresh ones;
-// { error } only when there is nothing stored to show. `fresh`: ask the server even within 5 minutes;
-// `persist: false`: nothing stored (the integration state, where an old answer would mislead).
+// { data: { <set>: rows }, refreshing, at } from the stored answers at once (or { loading }), then
+// { data, at } from the fresh ones; when the fetch fails with data shown, { data, failed, at }.
+// `at`: the last good answer (ms), the oldest of the sets. { error } only when nothing is stored.
+// `fresh`: ask the server even within 5 minutes; `persist: false`: nothing stored (the integration state, where an old answer would mislead).
 export function usePtv4(sets, { fresh = false, persist = true } = {}) {
   const key = sets.join(',')
   const initial = () => {
     const all = sets.map(s => persist ? stored(s) : null)
-    return all.every(d => d != null) ? { data: Object.fromEntries(sets.map((s, i) => [s, all[i]])), stale: true } : { loading: true }
+    return all.every(d => d != null) ? { data: Object.fromEntries(sets.map((s, i) => [s, all[i]])), refreshing: true, at: storedAt(sets) } : { loading: true }
   }
   const [st, setSt] = useState(initial)
   // a PWA left open overnight comes back without remounting: ask again when it is shown (ptv4() skips within 5 minutes)
@@ -47,12 +51,13 @@ export function usePtv4(sets, { fresh = false, persist = true } = {}) {
     Promise.all(sets.map(s => ptv4(s, fresh, persist))).then(
       rows => live && setSt(prev => {
         const data = Object.fromEntries(sets.map((s, i) => [s, rows[i]]))
-        return prev.data && JSON.stringify(prev.data) === JSON.stringify(data) ? { data: prev.data } : { data }
+        const at = (persist && storedAt(sets)) || Date.now()
+        return { data: prev.data && JSON.stringify(prev.data) === JSON.stringify(data) ? prev.data : data, at }
       }),
       e => {
         // signed out or another profile: what is stored is someone else's, so it goes
         if (e?.status === 401 || e?.status === 403) sets.forEach(s => { try { localStorage.removeItem(KEY(s)) } catch { /* blocked */ } })
-        if (live) setSt(prev => prev.data && e?.status !== 401 && e?.status !== 403 ? { ...prev, stale: true } : { error: e?.message || String(e), status: e?.status })
+        if (live) setSt(prev => prev.data && e?.status !== 401 && e?.status !== 403 ? { data: prev.data, failed: true, at: prev.at } : { error: e?.message || String(e), status: e?.status })
       })
     return () => { live = false }
   }, [key, shown]) // eslint-disable-line react-hooks/exhaustive-deps

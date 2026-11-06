@@ -68,6 +68,7 @@ export const L = {
   byPtv4: 'ptv4',
   loading: 'Pobieram dane z ptv4…',
   refreshing: 'Pokazuję ostatnie dane, sprawdzam nowsze…',
+  refreshFailed: when => `Nie udało się odświeżyć · dane z ${when}`,
   ptv4Error: 'Nie udało się pobrać danych z ptv4',
   sections: { numbers: 'Liczby', energy: 'Masa i energia', recovery: 'Regeneracja', strength: 'Siła', goals: 'Cele', volume: 'Objętość', daily: 'Dzień po dniu' },
   tiles: {

@@ -3,6 +3,7 @@ import { Button } from '../../components/ui.jsx'
 import { usePtv4 } from '../lib/ptv4.js'
 import { L } from '../strings.js'
 import { nearestGoal } from '../lib/goals.js'
+import { freshnessLine } from '../lib/freshness.js'
 
 // Home's "Dziś": ptv4's takeaway, today's Training Readiness, the 28-day mass rate, Body Battery and the nearest goal, plus the way
 // into Statystyki+. All from the sidecar; offline, signed out or no ptv4 → the card is not there.
@@ -13,11 +14,13 @@ export default function TodayCard({ tiles = {} }) {
   if (!k) return null
   const g = st.data.garmin_kpi?.[0]
   const goal = nearestGoal(st.data.goals)
+  const freshness = freshnessLine(st)
   return <div className="card">
     <div className="row between" style={{ marginBottom: 6 }}>
       <h2 style={{ margin: 0 }}>{L.today}</h2>
       <Button size="sm" variant="ghost" trailingIcon="chevronRight" onClick={() => nav('/ptv4')}>{L.homeTile}</Button>
     </div>
+    {freshness && <div className="small muted" style={{ marginBottom: 6 }}>{freshness}</div>}
     {tiles.takeaway !== false && <div className="small" style={{ marginBottom: 10 }}>{k.takeaway}</div>}
     <div className="tiles" style={{ marginBottom: 0 }}>
       {tiles.readiness !== false && <div className="tile" style={{ background: 'var(--surface-2)' }}>

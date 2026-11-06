@@ -9,6 +9,7 @@ import { L } from '../strings.js'
 import { layoutOf } from '../layout.js'
 import { extOf, setExtIn } from '../state.js'
 import { baseName } from '../lib/goals.js'
+import { freshnessLine } from '../lib/freshness.js'
 
 // A chart's time window; a year at most, older is history.
 const RANGES = { '1M': 31, '3M': 92, '1Y': 365 }
@@ -276,12 +277,13 @@ export default function Ptv4Stats() {
   const st = usePtv4(['kpi', 'energy', 'body', 'garmin_kpi', 'garmin_daily', 'readiness', 'lifts', 'lift_summary', 'volume', 'goals'], { fresh: true })
   const ext = extOf(useStore(s => s.S))
   const layout = layoutOf(ext, 'stats')
+  const freshness = freshnessLine(st)
   return <div className="ext-page">
     <div className="hdr">
       <button className="iconbtn" data-back="/home" onClick={() => nav(-1)} aria-label="Wstecz"><Icon name="chevronLeft" /></button>
       <div style={{ flex: 1, marginInlineStart: 12 }}><h1>{L.statsTitle}</h1><div className="sub">{L.statsSub}</div></div>
     </div>
-    {(st.loading || st.stale) && <div className="small muted" style={{ margin: '0 4px 8px' }}>{st.loading ? L.loading : L.refreshing}</div>}
+    {(st.loading || freshness) && <div className="small muted" style={{ margin: '0 4px 8px' }}>{st.loading ? L.loading : freshness}</div>}
     {st.error && <div className="card small" style={{ color: 'var(--red)' }}>{L.ptv4Error}: {st.error}</div>}
     {st.data && layout.filter(sec => sec.on).map(sec => <div key={sec.id}>
       <h2 className="ext-sec">{L.sections[sec.id]}</h2>
