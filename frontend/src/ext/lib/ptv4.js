@@ -4,7 +4,7 @@
 // Stale-while-revalidate: the last answer per set is kept in localStorage and shown at once; a
 // fresh one is fetched behind it and replaces it only when it differs. The sidecar keeps its own
 // result warm, so the fetch itself is quick too.
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../../lib/api.js'
 
 const KEY = set => 'ext_ptv4_' + set
@@ -32,6 +32,7 @@ export function ptv4(set, fresh = false, persist = true) {
 // { data, at } from the fresh ones; when the fetch fails with data shown, { data, failed, at }.
 // `at`: the last good answer (ms), the oldest of the sets. { error } only when nothing is stored.
 // `fresh`: ask the server even within 5 minutes; `persist: false`: nothing stored (the integration state, where an old answer would mislead).
+// A failed fetch (not 401/403) is asked again once after 30 s and when the device goes online; no loop.
 export function usePtv4(sets, { fresh = false, persist = true } = {}) {
   const key = sets.join(',')
   const initial = () => {
@@ -39,27 +40,40 @@ export function usePtv4(sets, { fresh = false, persist = true } = {}) {
     return all.every(d => d != null) ? { data: Object.fromEntries(sets.map((s, i) => [s, all[i]])), refreshing: true, at: storedAt(sets) } : { loading: true }
   }
   const [st, setSt] = useState(initial)
-  // a PWA left open overnight comes back without remounting: ask again when it is shown (ptv4() skips within 5 minutes)
+  // bumped to fetch again: when shown (a PWA left open overnight comes back without remounting; ptv4() skips within 5 minutes) and by the retries below
   const [shown, setShown] = useState(0)
+  // the 30 s retry already ran for this failure: the next one waits for visibility or online
+  // (an online retry, often before the network works, keeps the 30 s one)
+  const retried = useRef(false)
   useEffect(() => {
-    const on = () => document.visibilityState === 'visible' && setShown(n => n + 1)
+    const on = () => { if (document.visibilityState === 'visible') { retried.current = false; setShown(n => n + 1) } }
     document.addEventListener('visibilitychange', on)
     return () => document.removeEventListener('visibilitychange', on)
   }, [])
   useEffect(() => {
-    let live = true
+    let live = true, timer
+    const again = () => setShown(n => n + 1)
     Promise.all(sets.map(s => ptv4(s, fresh, persist))).then(
-      rows => live && setSt(prev => {
-        const data = Object.fromEntries(sets.map((s, i) => [s, rows[i]]))
-        const at = (persist && storedAt(sets)) || Date.now()
-        return { data: prev.data && JSON.stringify(prev.data) === JSON.stringify(data) ? prev.data : data, at }
-      }),
+      rows => {
+        if (!live) return
+        retried.current = false
+        setSt(prev => {
+          const data = Object.fromEntries(sets.map((s, i) => [s, rows[i]]))
+          const at = (persist && storedAt(sets)) || Date.now()
+          return { data: prev.data && JSON.stringify(prev.data) === JSON.stringify(data) ? prev.data : data, at }
+        })
+      },
       e => {
         // signed out or another profile: what is stored is someone else's, so it goes
-        if (e?.status === 401 || e?.status === 403) sets.forEach(s => { try { localStorage.removeItem(KEY(s)) } catch { /* blocked */ } })
-        if (live) setSt(prev => prev.data && e?.status !== 401 && e?.status !== 403 ? { data: prev.data, failed: true, at: prev.at } : { error: e?.message || String(e), status: e?.status })
+        const auth = e?.status === 401 || e?.status === 403
+        if (auth) sets.forEach(s => { try { localStorage.removeItem(KEY(s)) } catch { /* blocked */ } })
+        if (!live) return
+        setSt(prev => prev.data && !auth ? { data: prev.data, failed: true, at: prev.at } : { error: e?.message || String(e), status: e?.status })
+        if (auth) return
+        window.addEventListener('online', again)
+        if (!retried.current) timer = setTimeout(() => { retried.current = true; again() }, 30000)
       })
-    return () => { live = false }
+    return () => { live = false; clearTimeout(timer); window.removeEventListener('online', again) }
   }, [key, shown]) // eslint-disable-line react-hooks/exhaustive-deps
   return st
 }
