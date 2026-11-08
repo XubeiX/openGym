@@ -159,6 +159,10 @@ export const L = {
   pctWk: v => v == null ? '–' : `${num1(v)}%/tydz.`,
   goalSeries: { target: 'cel', proj: 'projekcja' },
   nearestGoal: 'Najbliższy cel',
+  // strażnik siły
+  guardDrop: r => `${r.exercise}: spadek siły o ${num1(-r.change_pct)}%`,
+  guardDetail: r => `Średnia z dwóch sesji ${num1(r.avg_e1rm)} kg, najlepsza ${num1(r.ref_e1rm)} kg z ${fmtDay(r.ref_date)}.`,
+  guardNoPhases: 'Strażnik siły nie działa, bo nie ma wpisanych faz. Dodasz je w Ustawienia → Wygląd i Start → Dodatki → Fazy.',
   // fazy
   phaseNames: { masa: 'masa', redukcja: 'redukcja', deload: 'deload' },
   phaseTip: type => `Faza: ${type}`,
