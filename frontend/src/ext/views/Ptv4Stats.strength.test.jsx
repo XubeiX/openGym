@@ -48,7 +48,7 @@ describe('Statystyki+ Siła: e1RM against body weight', () => {
   })
   it('shows a dash when the server does not send the value yet', () => {
     mount([row()])
-    expect(tile().querySelector('.v').textContent).toBe('—')
+    expect(tile().querySelector('.v').textContent).toBe('–')
   })
   it('draws e1RM and MA7 of the picked exercise as percent, the first point of the window = 100', () => {
     mount([row()])

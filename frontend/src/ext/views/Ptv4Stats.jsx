@@ -205,7 +205,7 @@ function Strength({ lifts, summary, body }) {
       series('ma7', since(body, 'date', RANGES[rp]), 'date', 'ma7', C.s2)].map(pctOfFirst)} />
     <div className="tiles" style={{ gridTemplateColumns: '1fr', margin: '12px 0 0' }}>
       <div className="tile" style={{ background: 'var(--surface-2)' }}>
-        <div className="l">{L.relStrength8wk}</div><div className="v" style={{ fontSize: 18, color: chg(s?.rel8) }}>{s?.rel8_txt ?? '—'}</div>
+        <div className="l">{L.relStrength8wk}</div><div className="v" style={{ fontSize: 18, color: chg(s?.rel8) }}>{s?.rel8_txt ?? '–'}</div>
       </div>
     </div>
   </div>
