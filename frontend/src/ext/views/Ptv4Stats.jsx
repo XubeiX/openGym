@@ -21,8 +21,15 @@ const C = { s1: 'var(--ext-s1)', s2: 'var(--ext-s2)', s3: 'var(--ext-s3)', neutr
 // rows → a chart series of `key` by `date`
 const pts = (rows, date, key) => rows.filter(r => r[key] != null).map(r => ({ t: at(r[date]), y: r[key] }))
 const series = (key, rows, date, field, color, kind) => ({ key, name: L.series[key], color, kind, points: pts(rows, date, field) })
-// a series as percent of its own first point
-const pctOfFirst = s => ({ ...s, points: s.points.map(p => ({ t: p.t, y: p.y / s.points[0].y * 100 })) })
+// e1RM and MA7 as percent, both 100 on the first session in the window with an MA7 (that day's or the last earlier one).
+function pctFromCommonDay(lift, ma7) {
+  const ma7At = t => ma7.points.findLast(p => p.t <= t)
+  const start = lift.points.find(p => ma7At(p.t))
+  if (!start) return [lift, ma7].map(s => ({ ...s, points: [] }))
+  const after = (s, base) => s.points.filter(p => p.t > start.t).map(p => ({ t: p.t, y: p.y / base * 100 }))
+  const first = { t: start.t, y: 100 }
+  return [{ ...lift, points: [first, ...after(lift, start.y)] }, { ...ma7, points: [first, ...after(ma7, ma7At(start.t).y)] }]
+}
 const kcal = v => v == null ? '–' : (v > 0 ? '+' : '') + v.toLocaleString('pl-PL') + ' kcal'
 
 function Tile({ label, value, sub }) {
@@ -219,8 +226,8 @@ function Strength({ lifts, summary, body }) {
     <h3 style={{ margin: '16px 0 2px' }}>{L.liftPctChart}</h3>
     <div className="small muted" style={{ marginBottom: 10 }}>{L.liftPctNote}</div>
     <RangeSwitch id="liftPct" value={rp} />
-    <ExtChart h={200} unit="%" series={[series('e1rm', since(lifts.filter(r => r.exercise === pick), 'date', RANGES[rp]), 'date', 'e1rm', C.s1),
-      series('ma7', since(body, 'date', RANGES[rp]), 'date', 'ma7', C.s2)].map(pctOfFirst)} />
+    <ExtChart h={200} unit="%" series={pctFromCommonDay(series('e1rm', since(lifts.filter(r => r.exercise === pick), 'date', RANGES[rp]), 'date', 'e1rm', C.s1),
+      series('ma7', since(body, 'date', RANGES[rp]), 'date', 'ma7', C.s2))} />
     <div className="tiles" style={{ gridTemplateColumns: '1fr', margin: '12px 0 0' }}>
       <div className="tile" style={{ background: 'var(--surface-2)' }}>
         <div className="l">{L.relStrength8wk}</div><div className="v" style={{ fontSize: 18, color: chg(s?.rel8) }}>{s?.rel8_txt ?? '–'}</div>

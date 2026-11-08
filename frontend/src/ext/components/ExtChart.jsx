@@ -1,10 +1,9 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { MONTHS } from '../../lib/format.js'
+import { MONTHS, isoOf } from '../../lib/format.js'
 import { t } from '../../lib/i18n.js'
 import { useStore } from '../../store/useStore.js'
 import { at } from '../lib/ptv4.js'
 import { phasesOf, phaseOn, phaseRuns } from '../lib/phases.js'
-import { inWeeks } from '../lib/goals.js'
 import { L } from '../strings.js'
 
 // Statystyki+'s chart. upstream's LineChart draws each next series thinner on top and colours the
@@ -18,7 +17,7 @@ import { L } from '../strings.js'
 const PAD = { l: 44, r: 10, t: 10, b: 22 }
 const DAY = 86400000
 const PHASE_COLOR = { masa: 'var(--teal)', redukcja: 'var(--orange)', deload: 'var(--purple)' }
-const dayOf = v => inWeeks(0, new Date(v))
+const dayOf = v => isoOf(new Date(v))
 
 function niceTicks(min, max, n = 4) {
   const raw = (max - min) / n || 1

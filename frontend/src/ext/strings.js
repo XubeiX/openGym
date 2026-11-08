@@ -123,7 +123,7 @@ export const L = {
   chooseExercise: 'Wybierz ćwiczenie',
   liftLast: 'e1RM', lift8wk: '8 tygodni', liftPrs: 'Rekordy',
   liftPctChart: 'e1RM i waga w procentach',
-  liftPctNote: 'Pierwszy punkt widocznego okna to 100. Waga to MA7.',
+  liftPctNote: 'Pierwszy dzień okna z obiema wartościami to 100. Waga to MA7.',
   relStrength8wk: 'Siła względna, 8 tygodni',
   volumeTitle: 'Serie frakcyjne na tydzień, ostatnie bloki',
   volumeNote: 'Seria bezpośrednia = 1, pośrednia = 0,5. Pasmo docelowe 10–20 serii/tydz. (Schoenfeld 2017, Pelland 2024).',
@@ -188,7 +188,7 @@ export const L = {
   },
   // ustawienia strażnika siły
   guardSection: 'Strażnik siły',
-  guardFooter: 'Alert działa tylko na redukcji. Puste pole progu albo 0 to 5%. Zmiana dochodzi do Statystyk+ w ciągu kilku minut.',
+  guardFooter: 'Strażnik siły pilnuje spadku siły tylko na redukcji. Puste pole progu albo 0 to 5%. Zmiana dochodzi do Statystyk+ w ciągu kilku minut.',
   guardLifts: 'Główne boje',
   guardLiftsSub: 'Ćwiczenie z dwóch dni planu jest pilnowane osobno dla każdego dnia.',
   guardThreshold: 'Próg spadku',
