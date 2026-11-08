@@ -19,6 +19,8 @@ const C = { s1: 'var(--ext-s1)', s2: 'var(--ext-s2)', s3: 'var(--ext-s3)', neutr
 // rows → a chart series of `key` by `date`
 const pts = (rows, date, key) => rows.filter(r => r[key] != null).map(r => ({ t: at(r[date]), y: r[key] }))
 const series = (key, rows, date, field, color, kind) => ({ key, name: L.series[key], color, kind, points: pts(rows, date, field) })
+// a series as percent of its own first point
+const pctOfFirst = s => ({ ...s, points: s.points.map(p => ({ t: p.t, y: p.y / s.points[0].y * 100 })) })
 const kcal = v => v == null ? '–' : (v > 0 ? '+' : '') + v.toLocaleString('pl-PL') + ' kcal'
 
 function Tile({ label, value, sub }) {
@@ -171,12 +173,13 @@ const Head = ({ title, note }) => <>
 const num = (v, d = 1) => v == null ? '–' : v.toLocaleString('pl-PL', { maximumFractionDigits: d })
 
 // Siła: e1RM of the picked exercise over time (lifts, PRs as dots) and, under the chart, its last
-// e1RM, 8-week change and record count (lift_summary). The list is the active exercises, most trained first.
-function Strength({ lifts, summary }) {
+// e1RM, 8-week change and record count (lift_summary); then e1RM against MA7 as percent of the window's
+// start, and the 8-week change in relative strength (lift_summary). The list is the active exercises, most trained first.
+function Strength({ lifts, summary, body }) {
   const names = summary.length ? summary.map(r => r.exercise) : [...new Set(lifts.map(r => r.exercise))]
   const [picked, setPicked] = useState(null)
   const pick = names.includes(picked) ? picked : names[0]
-  const rr = useRange('lift')
+  const rr = useRange('lift'), rp = useRange('liftPct')
   const rows = since(lifts.filter(r => r.exercise === pick), 'date', RANGES[rr])
   const s = summary.find(r => r.exercise === pick)
   const chg = v => v == null ? undefined : v > 1 ? 'var(--green)' : v < -2 ? 'var(--red)' : undefined
@@ -195,6 +198,16 @@ function Strength({ lifts, summary }) {
           <div className="l">{l}</div><div className="v" style={{ fontSize: 18, color }}>{v}</div>
         </div>)}
     </div>}
+    <h3 style={{ margin: '16px 0 2px' }}>{L.liftPctChart}</h3>
+    <div className="small muted" style={{ marginBottom: 10 }}>{L.liftPctNote}</div>
+    <RangeSwitch id="liftPct" value={rp} />
+    <ExtChart h={200} unit="%" series={[series('e1rm', since(lifts.filter(r => r.exercise === pick), 'date', RANGES[rp]), 'date', 'e1rm', C.s1),
+      series('ma7', since(body, 'date', RANGES[rp]), 'date', 'ma7', C.s2)].map(pctOfFirst)} />
+    <div className="tiles" style={{ gridTemplateColumns: '1fr', margin: '12px 0 0' }}>
+      <div className="tile" style={{ background: 'var(--surface-2)' }}>
+        <div className="l">{L.relStrength8wk}</div><div className="v" style={{ fontSize: 18, color: chg(s?.rel8) }}>{s?.rel8_txt ?? '–'}</div>
+      </div>
+    </div>
   </div>
 }
 
@@ -289,7 +302,7 @@ export default function Ptv4Stats() {
       <h2 className="ext-sec">{L.sections[sec.id]}</h2>
       {sec.id === 'numbers' && (st.data.kpi[0] ? <Numbers k={st.data.kpi[0]} tiles={sec.tiles} /> : <div className="card muted small">{L.noData}</div>)}
       {sec.id === 'energy' && <Energy energy={st.data.energy} body={st.data.body} tiles={sec.tiles} />}
-      {sec.id === 'strength' && <Strength lifts={st.data.lifts} summary={st.data.lift_summary} />}
+      {sec.id === 'strength' && <Strength lifts={st.data.lifts} summary={st.data.lift_summary} body={st.data.body} />}
       {sec.id === 'goals' && <Goals goals={st.data.goals} lifts={st.data.lifts} />}
       {sec.id === 'volume' && <Volume rows={st.data.volume} />}
       {sec.id === 'daily' && <Daily body={st.data.body} tiles={sec.tiles} />}
