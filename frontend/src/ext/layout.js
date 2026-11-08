@@ -1,7 +1,7 @@
 // The order and visibility of the fork's Home cards and Statystyki+ sections, and of the tiles in
 // them: S.ext.layout = { home: [{ id, on, tiles: { <id>: on } }], stats: [ … ] }, section order =
 // array order. The registry below is the truth: a section or tile added in a later version shows
-// up switched on at the end, one taken out of the registry drops out of what was saved.
+// up switched on at the end (of its part, in Statystyki+), one taken out of the registry drops out of what was saved.
 export const REGISTRY = {
   home: [
     { id: 'checks', tiles: [] },
@@ -20,6 +20,19 @@ export const REGISTRY = {
   ],
 }
 
+// Statystyki+ in parts, in this fixed order; only the sections inside a part can be reordered.
+export const STATS_GROUPS = [
+  { id: 'numbers', sections: ['numbers'] },
+  { id: 'body', sections: ['energy', 'recovery'] },
+  { id: 'strength', sections: ['strength', 'goals', 'volume'] },
+  { id: 'days', sections: ['daily'] },
+]
+
+const partOf = id => STATS_GROUPS.findIndex(g => g.sections.includes(id))
+
+// The sections of a Statystyki+ layout, part by part.
+export const groupsOf = list => STATS_GROUPS.map(g => ({ id: g.id, sections: list.filter(s => g.sections.includes(s.id)) }))
+
 // Before S.ext.layout existed, each Home card had its own switch (S.ext.homeChecks …).
 const LEGACY = { checks: 'homeChecks', today: 'homeToday', weight: 'homeWeight', recent: 'homeRecent' }
 
@@ -27,6 +40,7 @@ export function layoutOf(ext, where) {
   const reg = REGISTRY[where]
   const saved = (ext?.layout?.[where] || []).filter(s => reg.some(r => r.id === s?.id))
   const ids = [...saved.map(s => s.id), ...reg.map(r => r.id).filter(id => !saved.some(s => s.id === id))]
+  if (where === 'stats') ids.sort((a, b) => partOf(a) - partOf(b)) // stable: the saved order stays inside a part
   return ids.map(id => {
     const r = reg.find(x => x.id === id), s = saved.find(x => x.id === id)
     const on = s ? s.on !== false : ext?.[LEGACY[id]] !== false

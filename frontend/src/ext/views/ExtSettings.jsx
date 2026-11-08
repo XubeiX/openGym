@@ -4,7 +4,7 @@ import { t } from '../../lib/i18n.js'
 import { Section, Row, Switch, Segmented, SelectRow } from '../../components/ui.jsx'
 import Icon from '../../components/Icon.jsx'
 import { useListReorder, moved } from '../../lib/use-list-reorder.js'
-import { layoutOf, withSection } from '../layout.js'
+import { layoutOf, withSection, groupsOf } from '../layout.js'
 import { CHECKS, checksOf, fieldsOf } from '../lib/checks.js'
 import { extOf, setExt, setExtIn } from '../state.js'
 import { L } from '../strings.js'
@@ -39,18 +39,16 @@ const SECTIONS = {
   },
 }
 
-// One reorderable list: a section per row with its switch and handle, its tiles as chips under it.
-function LayoutList({ ext, where, title, footer }) {
-  const list = layoutOf(ext, where)
-  const save = l => setExt({ layout: { ...(ext.layout || {}), [where]: l } })
-  const r = useListReorder(list.length, (from, to) => save(moved(list, from, to)))
-  return <Section title={title} footer={footer}>
-    <div ref={r.listRef}>{list.map((sec, i) => {
+// One reorderable run of `list`: a section per row with its switch and handle, its tiles as chips under it.
+function LayoutRows({ ext, where, list, rows, save }) {
+  const first = list.indexOf(rows[0])
+  const r = useListReorder(rows.length, (from, to) => save(moved(list, first + from, first + to)))
+  return <div ref={r.listRef}>{rows.map((sec, i) => {
       const d = SECTIONS[where][sec.id]
       return <div key={sec.id} data-reorder-row style={r.rowStyle(i)}>
         <Row icon={d.icon} iconTint={d.tint} title={d.title} subtitle={d.sub}>
           <Switch aria-label={d.title} checked={sec.on} onChange={v => save(withSection(ext, where, sec.id, { on: v }))} />
-          <button className="plan-handle" aria-label={L.moveSection(d.title)} {...r.handle(i)}><Icon name="chevronsUpDown" /></button>
+          {rows.length > 1 && <button className="plan-handle" aria-label={L.moveSection(d.title)} {...r.handle(i)}><Icon name="chevronsUpDown" /></button>}
         </Row>
         {sec.on && d.tiles && <div className="chips ext-chips" style={{ padding: '0 16px 10px' }}>
           {Object.entries(d.tiles).map(([id, name]) => <button key={id} type="button" className={'chip' + (sec.tiles[id] ? ' on' : '')}
@@ -58,6 +56,18 @@ function LayoutList({ ext, where, title, footer }) {
         </div>}
       </div>
     })}</div>
+}
+
+// Home is one list; Statystyki+ a list per part, so a section cannot leave its part.
+function LayoutList({ ext, where, title, footer }) {
+  const list = layoutOf(ext, where)
+  const save = l => setExt({ layout: { ...(ext.layout || {}), [where]: l } })
+  const parts = where === 'stats' ? groupsOf(list) : [{ sections: list }]
+  return <Section title={title} footer={footer}>
+    {parts.map(p => <div key={p.id || where}>
+      {p.id && <div className="small muted" style={{ padding: '8px 16px 2px' }}>{L.groups[p.id]}</div>}
+      <LayoutRows ext={ext} where={where} list={list} rows={p.sections} save={save} />
+    </div>)}
   </Section>
 }
 
