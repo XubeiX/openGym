@@ -21,21 +21,23 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true
 const ago = n => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10)
 const lift = (n, e1rm, exercise = 'Przysiad') => ({ date: ago(n), exercise, e1rm, pr: false })
 const LIFTS = [lift(200, 50), lift(60, 100), lift(20, 120), lift(10, 126), lift(40, 70, 'Wiosło'), lift(10, 90, 'Wiosło')]
-// MA7 has no value on the first day: the first point is the first one with a number
-const BODY = [[200, 120], [60, null], [59, 95], [25, 80], [10, 76]].map(([n, ma7]) => ({ date: ago(n), ma7 }))
+// MA7 has no value on the first session's day: the last earlier one in the window stands in for it
+const bodyOf = rows => rows.map(([n, ma7]) => ({ date: ago(n), ma7 }))
+const BODY = bodyOf([[200, 120], [61, 100], [60, null], [59, 95], [25, 80], [10, 76]])
 const row = extra => ({ exercise: 'Przysiad', last_txt: '126,0 kg', chg8_txt: '+26,0%', chg8: 26, prs: 1, sessions: 4, ...extra })
 
 let root, host
 afterEach(() => { act(() => root.unmount()); host.remove() })
-function mount(summary, S = {}, guard = []) {
-  mocks.data = { kpi: [], energy: [], body: BODY, garmin_kpi: [], garmin_daily: [], readiness: [], lifts: LIFTS, lift_summary: summary, volume: [], goals: [], strength_guard: guard }
+function mount(summary, S = {}, guard = [], body = BODY) {
+  mocks.data = { kpi: [], energy: [], body, garmin_kpi: [], garmin_daily: [], readiness: [], lifts: LIFTS, lift_summary: summary, volume: [], goals: [], strength_guard: guard }
   useStore.setState({ S: { unit: 'kg', ext: { layout: { stats: [{ id: 'strength', on: true }] } }, ...S } })
   host = document.createElement('div'); document.body.appendChild(host)
   root = createRoot(host)
   act(() => root.render(<Ptv4Stats />))
 }
 const tile = () => [...host.querySelectorAll('.tile')].find(t => t.querySelector('.l').textContent === 'Siła względna, 8 tygodni')
-const percent = () => Object.fromEntries(JSON.parse(host.querySelector('.chart[data-unit="%"]').dataset.series).map(s => [s.key, s.points.map(p => p.y)]))
+const percentSeries = () => JSON.parse(host.querySelector('.chart[data-unit="%"]').dataset.series)
+const percent = () => Object.fromEntries(percentSeries().map(s => [s.key, s.points.map(p => p.y)]))
 
 describe('Statystyki+ Siła: e1RM against body weight', () => {
   it('shows the 8-week change in relative strength from lift_summary', () => {
@@ -54,7 +56,18 @@ describe('Statystyki+ Siła: e1RM against body weight', () => {
     mount([row()])
     const { e1rm, ma7 } = percent()
     expect(e1rm).toEqual([100, 120, 126])
-    expect(ma7[0]).toBe(100); expect(ma7[1]).toBeCloseTo(84.21, 2); expect(ma7[2]).toBeCloseTo(80, 5)
+    expect(ma7).toEqual([100, 95, 80, 76])
+  })
+  it('puts both series at 100 on the first day of the window where both have a value', () => {
+    mount([row()], {}, [], bodyOf([[59, 95], [25, 80], [10, 76]]))
+    const [e1rm, ma7] = percentSeries()
+    expect(e1rm.points.map(p => p.y)).toEqual([100, 105])
+    expect(ma7.points.map(p => p.y)).toEqual([100, 95])
+    expect(ma7.points[0].t).toBe(e1rm.points[0].t)
+  })
+  it('draws nothing when no session has a body weight to compare with', () => {
+    mount([row()], {}, [], [])
+    expect(percentSeries().map(s => s.points)).toEqual([[], []])
   })
   it('recounts the 100 point when the window changes', () => {
     mount([row()])

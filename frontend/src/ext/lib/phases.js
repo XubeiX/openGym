@@ -1,7 +1,7 @@
 // Training phases: S.ext.phases = [{ type: 'masa' | 'redukcja' | 'deload', start: 'YYYY-MM-DD', end?: 'YYYY-MM-DD' }].
 // No `end` = still running. ptv4's sidecar reads them from the state file for the strength guard.
 
-import { inWeeks } from './goals.js'
+import { isoOf, todayISO } from '../../lib/format.js'
 
 export const phasesOf = ext => Array.isArray(ext?.phases) ? ext.phases : []
 
@@ -17,17 +17,17 @@ export function phaseError(phase, others) {
 }
 
 // The phase of a day ('YYYY-MM-DD') or null; a deload wins over what is around it, no `end` = through today.
-export function phaseOn(phases, day, today = inWeeks(0)) {
+export function phaseOn(phases, day, today = todayISO()) {
   const on = phases.filter(p => p.start <= day && day <= (p.end || today))
   return (on.find(p => p.type === 'deload') || on[0])?.type ?? null
 }
 
 // A chart window (ms, first and last point) as runs of days of one phase: [{ type, start, end }].
-export function phaseRuns(phases, t0, t1, today = inWeeks(0)) {
+export function phaseRuns(phases, t0, t1, today = todayISO()) {
   const runs = [], d = new Date(t0)
   let prev = null
   for (let i = 0, n = Math.round((t1 - t0) / 86400000); i <= n; i++, d.setDate(d.getDate() + 1)) {
-    const day = inWeeks(0, d), type = phaseOn(phases, day, today)
+    const day = isoOf(d), type = phaseOn(phases, day, today)
     if (type && type === prev) runs.at(-1).end = day
     else if (type) runs.push({ type, start: day, end: day })
     prev = type
