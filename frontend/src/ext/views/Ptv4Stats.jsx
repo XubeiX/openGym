@@ -9,6 +9,7 @@ import { L } from '../strings.js'
 import { layoutOf, groupsOf } from '../layout.js'
 import { extOf, setExtIn } from '../state.js'
 import { baseName } from '../lib/goals.js'
+import { phasesOf } from '../lib/phases.js'
 import { freshnessLine } from '../lib/freshness.js'
 import { StatsIndex } from '../../views/Stats.jsx'
 
@@ -173,6 +174,22 @@ const Head = ({ title, note }) => <>
 </>
 const num = (v, d = 1) => v == null ? '–' : v.toLocaleString('pl-PL', { maximumFractionDigits: d })
 
+// The strength guard's bar over Siła: every active strength drop (strength_guard), the most serious first.
+// With no phases set ptv4 cannot tell a cut, so it says that instead.
+function GuardBar({ rows }) {
+  const noPhases = !phasesOf(extOf(useStore(s => s.S))).length
+  if (noPhases) return <div className="card muted small">{L.guardNoPhases}</div>
+  if (!rows.length) return null
+  return <div className="card ext-guard">
+    <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 8 }}>
+      {rows.map(r => <li key={r.exercise}>
+        <div className="row small" style={{ gap: 6, color: 'var(--red)', fontWeight: 600 }}><Icon name="info" />{L.guardDrop(r)}</div>
+        <div className="small muted" style={{ marginTop: 2 }}>{L.guardDetail(r)}</div>
+      </li>)}
+    </ul>
+  </div>
+}
+
 // Siła: e1RM of the picked exercise over time (lifts, PRs as dots) and, under the chart, its last
 // e1RM, 8-week change and record count (lift_summary); then e1RM against MA7 as percent of the window's
 // start, and the 8-week change in relative strength (lift_summary). The list is the active exercises, most trained first.
@@ -288,7 +305,7 @@ function Daily({ body, tiles }) {
 // /ptv4: Statystyki+, ptv4's numbers in openGym.
 export default function Ptv4Stats() {
   const nav = useNavigate()
-  const st = usePtv4(['kpi', 'energy', 'body', 'garmin_kpi', 'garmin_daily', 'readiness', 'lifts', 'lift_summary', 'volume', 'goals'], { fresh: true })
+  const st = usePtv4(['kpi', 'energy', 'body', 'garmin_kpi', 'garmin_daily', 'readiness', 'lifts', 'lift_summary', 'volume', 'goals', 'strength_guard'], { fresh: true })
   const ext = extOf(useStore(s => s.S))
   const layout = layoutOf(ext, 'stats')
   // The bar's first part is its "overview", the top of the page, whichever part that is.
@@ -306,6 +323,7 @@ export default function Ptv4Stats() {
       <h2 className="ext-sec">{L.sections[sec.id]}</h2>
       {sec.id === 'numbers' && (st.data.kpi[0] ? <Numbers k={st.data.kpi[0]} tiles={sec.tiles} /> : <div className="card muted small">{L.noData}</div>)}
       {sec.id === 'energy' && <Energy energy={st.data.energy} body={st.data.body} tiles={sec.tiles} />}
+      {sec.id === 'strength' && <GuardBar rows={st.data.strength_guard} />}
       {sec.id === 'strength' && <Strength lifts={st.data.lifts} summary={st.data.lift_summary} body={st.data.body} />}
       {sec.id === 'goals' && <Goals goals={st.data.goals} lifts={st.data.lifts} />}
       {sec.id === 'volume' && <Volume rows={st.data.volume} />}

@@ -12,7 +12,7 @@ vi.mock('../../store/useStore.js', async () => {
   return { useStore }
 })
 vi.mock('react-router-dom', () => ({ useNavigate: () => () => {} }))
-vi.mock('../lib/ptv4.js', async importOriginal => ({ ...await importOriginal(), usePtv4: () => ({ data: mocks.data, at: Date.now() }) }))
+vi.mock('../lib/ptv4.js', async importOriginal => ({ ...await importOriginal(), usePtv4: sets => ({ data: Object.fromEntries(sets.map(s => [s, mocks.data[s]])), at: Date.now() }) }))
 // what a chart is handed is what it draws; the svg itself needs a measured width
 vi.mock('../components/ExtChart.jsx', () => ({ default: ({ unit, series }) => <div className="chart" data-unit={unit} data-series={JSON.stringify(series)} /> }))
 import { useStore } from '../../store/useStore.js'
@@ -27,8 +27,8 @@ const row = extra => ({ exercise: 'Przysiad', last_txt: '126,0 kg', chg8_txt: '+
 
 let root, host
 afterEach(() => { act(() => root.unmount()); host.remove() })
-function mount(summary, S = {}) {
-  mocks.data = { kpi: [], energy: [], body: BODY, garmin_kpi: [], garmin_daily: [], readiness: [], lifts: LIFTS, lift_summary: summary, volume: [], goals: [] }
+function mount(summary, S = {}, guard = []) {
+  mocks.data = { kpi: [], energy: [], body: BODY, garmin_kpi: [], garmin_daily: [], readiness: [], lifts: LIFTS, lift_summary: summary, volume: [], goals: [], strength_guard: guard }
   useStore.setState({ S: { unit: 'kg', ext: { layout: { stats: [{ id: 'strength', on: true }] } }, ...S } })
   host = document.createElement('div'); document.body.appendChild(host)
   root = createRoot(host)
@@ -63,6 +63,25 @@ describe('Statystyki+ Siła: e1RM against body weight', () => {
     const { e1rm, ma7 } = percent()
     expect(e1rm).toEqual([100, 105])
     expect(ma7[0]).toBe(100); expect(ma7[1]).toBeCloseTo(95, 5)
+  })
+  const CUT = { phases: [{ type: 'redukcja', start: ago(30) }], layout: { stats: [{ id: 'strength', on: true }] } }
+  const drop = (exercise, change_pct) => ({ exercise, day: 3, avg_e1rm: 120, ref_e1rm: 130, ref_date: '2026-10-18', change_pct, last_date: '2026-11-01' })
+  it('lists every active strength drop with the lift and its size', () => {
+    mount([row()], { ext: CUT }, [drop('Przysiad (D3)', -7.7), drop('Wiosło', -5)])
+    const items = [...host.querySelectorAll('.ext-guard li')].map(li => li.textContent)
+    expect(items).toHaveLength(2)
+    expect(items[0]).toContain('Przysiad (D3): spadek siły o 7,7%')
+    expect(items[1]).toContain('Wiosło: spadek siły o 5%')
+  })
+  it('shows no bar when nothing dropped', () => {
+    mount([row()], { ext: CUT })
+    expect(host.querySelector('.ext-guard')).toBeNull()
+    expect(host.textContent).not.toContain('nie ma wpisanych faz')
+  })
+  it('says the guard is off when no phase is set', () => {
+    mount([row()])
+    expect(host.textContent).toContain('nie ma wpisanych faz')
+    expect(host.querySelector('.ext-guard')).toBeNull()
   })
   it('works with no phases set', () => {
     mount([row({ rel8: -2, rel8_txt: '-2,0%' })], { ext: { phases: [] } })
