@@ -71,6 +71,7 @@ export const L = {
   refreshFailed: when => `Nie udało się odświeżyć · dane z ${when}`,
   ptv4Error: 'Nie udało się pobrać danych z ptv4',
   sections: { numbers: 'Liczby', energy: 'Masa i energia', recovery: 'Regeneracja', strength: 'Siła', goals: 'Cele', volume: 'Objętość', daily: 'Dzień po dniu' },
+  groups: { numbers: 'Liczby', body: 'Ciało', strength: 'Siła', days: 'Dni' },
   tiles: {
     tdee: 'TDEE adaptacyjny, 28 dni', balAdapt: 'Bilans z TDEE adaptacyjnego, 28 dni', balWatch: 'Bilans z zegarka, 28 dni',
     protein: 'Białko, średnia tygodnia', sleep: 'Sen, średnia 7 dni', prs: 'Rekordy, ostatnie 28 dni',
@@ -94,7 +95,7 @@ export const L = {
   todayCardSub: 'Wniosek dnia, readiness i tempo masy z ptv4, wejście do Statystyk+.',
   homeTile: 'Analiza ptv4',
   layoutHomeFooter: 'Przytrzymaj uchwyt, żeby zmienić kolejność kart. Wbudowaną kartę masy ciała wyłączysz w Wygląd i Start.',
-  layoutStatsFooter: 'Kolejność i widoczność sekcji Statystyk+; chipy włączają pojedyncze kafelki.',
+  layoutStatsFooter: 'Widoczność sekcji Statystyk+ i ich kolejność w obrębie części; kolejność części jest stała. Chipy włączają pojedyncze kafelki.',
   moveSection: name => `Przesuń: ${name}`,
   todayTiles: { takeaway: 'Wniosek dnia', readiness: 'Readiness', mass: 'Tempo masy', bb: 'Body Battery', goal: 'Najbliższy cel' },
   energyTiles: { tdeeCard: 'TDEE', weight: 'Waga', protein: 'Białko' },

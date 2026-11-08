@@ -25,11 +25,21 @@ describe('layoutOf', () => {
   })
 
   it('a section or tile new to the registry joins at the end, switched on; an unknown id is dropped', () => {
-    const ext = { layout: { stats: [{ id: 'energy', on: true, tiles: { weight: false } }, { id: 'gone', on: true, tiles: {} }] } }
-    const l = layoutOf(ext, 'stats')
-    expect(ids(l)).toEqual(['energy', 'numbers', 'recovery', 'strength', 'goals', 'volume', 'daily'])
-    expect(l[0].tiles).toEqual({ tdeeCard: true, weight: false, protein: true })
+    const ext = { layout: { home: [{ id: 'today', on: true, tiles: { mass: false } }, { id: 'gone', on: true, tiles: {} }] } }
+    const l = layoutOf(ext, 'home')
+    expect(ids(l)).toEqual(['today', 'checks', 'weight', 'recent'])
+    expect(l[0].tiles).toEqual({ takeaway: true, readiness: true, mass: false, bb: true, goal: true })
     expect(l[1].on).toBe(true)
+  })
+
+  it('keeps the parts of Statystyki+ in their fixed order and the saved order inside each', () => {
+    const saved = ['daily', 'volume', 'recovery', 'strength', 'energy', 'numbers', 'goals'].map(id => ({ id, on: true, tiles: {} }))
+    expect(ids(layoutOf({ layout: { stats: saved } }, 'stats'))).toEqual(['numbers', 'recovery', 'energy', 'volume', 'strength', 'goals', 'daily'])
+  })
+
+  it('a section new to a part of Statystyki+ joins the end of that part', () => {
+    const saved = ['recovery', 'goals', 'strength'].map(id => ({ id, on: true, tiles: {} }))
+    expect(ids(layoutOf({ layout: { stats: saved } }, 'stats'))).toEqual(['numbers', 'recovery', 'energy', 'goals', 'strength', 'volume', 'daily'])
   })
 
   it('reads the Home switches from before the layout', () => {

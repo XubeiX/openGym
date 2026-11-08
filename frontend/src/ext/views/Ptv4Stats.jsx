@@ -6,10 +6,11 @@ import { Segmented, SelectRow } from '../../components/ui.jsx'
 import { usePtv4, at } from '../lib/ptv4.js'
 import ExtChart from '../components/ExtChart.jsx'
 import { L } from '../strings.js'
-import { layoutOf } from '../layout.js'
+import { layoutOf, groupsOf } from '../layout.js'
 import { extOf, setExtIn } from '../state.js'
 import { baseName } from '../lib/goals.js'
 import { freshnessLine } from '../lib/freshness.js'
+import { StatsIndex } from '../../views/Stats.jsx'
 
 // A chart's time window; a year at most, older is history.
 const RANGES = { '1M': 31, '3M': 92, '1Y': 365 }
@@ -290,6 +291,8 @@ export default function Ptv4Stats() {
   const st = usePtv4(['kpi', 'energy', 'body', 'garmin_kpi', 'garmin_daily', 'readiness', 'lifts', 'lift_summary', 'volume', 'goals'], { fresh: true })
   const ext = extOf(useStore(s => s.S))
   const layout = layoutOf(ext, 'stats')
+  // The bar's first part is its "overview", the top of the page, whichever part that is.
+  const groups = groupsOf(layout.filter(sec => sec.on)).filter(g => g.sections.length).map((g, i) => ({ ...g, value: i ? g.id : 'overview', label: L.groups[g.id] }))
   const freshness = freshnessLine(st)
   return <div className="ext-page">
     <div className="hdr">
@@ -298,7 +301,8 @@ export default function Ptv4Stats() {
     </div>
     {(st.loading || freshness) && <div className="small muted" style={{ margin: '0 4px 8px' }}>{st.loading ? L.loading : freshness}</div>}
     {st.error && <div className="card small" style={{ color: 'var(--red)' }}>{L.ptv4Error}: {st.error}</div>}
-    {st.data && layout.filter(sec => sec.on).map(sec => <div key={sec.id}>
+    {st.data && <StatsIndex sections={groups} />}
+    {st.data && groups.map(g => <section key={g.id} className="stats-sect" id={'stats-' + g.value} aria-label={g.label}>{g.sections.map(sec => <div key={sec.id}>
       <h2 className="ext-sec">{L.sections[sec.id]}</h2>
       {sec.id === 'numbers' && (st.data.kpi[0] ? <Numbers k={st.data.kpi[0]} tiles={sec.tiles} /> : <div className="card muted small">{L.noData}</div>)}
       {sec.id === 'energy' && <Energy energy={st.data.energy} body={st.data.body} tiles={sec.tiles} />}
@@ -307,6 +311,6 @@ export default function Ptv4Stats() {
       {sec.id === 'volume' && <Volume rows={st.data.volume} />}
       {sec.id === 'daily' && <Daily body={st.data.body} tiles={sec.tiles} />}
       {sec.id === 'recovery' && <Recovery k={st.data.garmin_kpi[0]} daily={st.data.garmin_daily} perf={st.data.readiness} tiles={sec.tiles} />}
-    </div>)}
+    </div>)}</section>)}
   </div>
 }
