@@ -1,6 +1,11 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { MONTHS } from '../../lib/format.js'
 import { t } from '../../lib/i18n.js'
+import { useStore } from '../../store/useStore.js'
+import { at } from '../lib/ptv4.js'
+import { phasesOf, phaseOn, phaseRuns } from '../lib/phases.js'
+import { inWeeks } from '../lib/goals.js'
+import { L } from '../strings.js'
 
 // Statystyki+'s chart. upstream's LineChart draws each next series thinner on top and colours the
 // first with the accent, so three lines read as one smear; here every line is the same 2px, each
@@ -8,8 +13,12 @@ import { t } from '../../lib/i18n.js'
 // are dots. A crosshair and a tooltip show every series at the hovered date; a legend names them.
 //   series: [{ key, name, color, kind?: 'line' | 'dots', points: [{ t, y }] }]
 //   bands:  [{ key, name, color, points: [{ t, lo, hi }] }]
+// The training phases (S.ext.phases) are read here, so every chart has them: stripes behind the
+// plot, each phase in the window in the legend, the hovered day's phase in the tooltip.
 const PAD = { l: 44, r: 10, t: 10, b: 22 }
 const DAY = 86400000
+const PHASE_COLOR = { masa: 'var(--teal)', redukcja: 'var(--orange)', deload: 'var(--purple)' }
+const dayOf = v => inWeeks(0, new Date(v))
 
 function niceTicks(min, max, n = 4) {
   const raw = (max - min) / n || 1
@@ -42,6 +51,7 @@ export default function ExtChart({ series = [], bands = [], h = 180, unit = '', 
   // zoom the whole page out, and they do not zoom back in.
   const [w, setW] = useState(null)
   const [hover, setHover] = useState(null)
+  const phases = phasesOf(useStore(s => s.S?.ext))
   useLayoutEffect(() => {
     const el = wrap.current
     if (!el) return
@@ -73,10 +83,17 @@ export default function ExtChart({ series = [], bands = [], h = 180, unit = '', 
     setHover(at)
   }
   const near = (pts, at) => pts.reduce((b, p) => Math.abs(p.t - at) <= 4 * DAY && (!b || Math.abs(p.t - at) < Math.abs(b.t - at)) ? p : b, null)
+  const runs = phaseRuns(phases, t0, t1)
+  const hoverPhase = hover != null && phaseOn(phases, dayOf(hover))
 
   return <div ref={wrap} style={{ position: 'relative', minWidth: 0 }}>
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: 'block', maxWidth: '100%', touchAction: 'pan-y' }}
       onPointerMove={onMove} onPointerLeave={() => setHover(null)} role="img">
+      {runs.map(r => {
+        // a run touching the window's edge fills to the plot's edge; a day is as wide as itself
+        const x0 = r.start === dayOf(t0) ? PAD.l : X(at(r.start) - DAY / 2), x1 = r.end === dayOf(t1) ? w - PAD.r : X(at(r.end) + DAY / 2)
+        return <rect key={r.start} data-phase={r.type} x={x0} y={PAD.t} width={x1 - x0} height={h - PAD.t - PAD.b} fill={PHASE_COLOR[r.type]} opacity="0.14" />
+      })}
       {ticks.map(v => <g key={v}>
         <line x1={PAD.l} x2={w - PAD.r} y1={Y(v)} y2={Y(v)} stroke="var(--sep)" strokeWidth="1" />
         <text x={PAD.l - 6} y={Y(v) + 4} textAnchor="end" fontSize="11" fill="var(--label-3)">{fmt(v)}</text>
@@ -107,10 +124,12 @@ export default function ExtChart({ series = [], bands = [], h = 180, unit = '', 
       <b>{new Date(hover).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' })}</b>
       {series.map(s => { const p = near(s.points, hover); return p && <div key={s.key}><i style={{ background: s.color }} />{s.name}: {fmt(p.y)}{unit && ' ' + unit}</div> })}
       {bands.map(b => { const p = near(b.points, hover); return p && <div key={b.key}><i style={{ background: b.color, opacity: 0.5 }} />{b.name}: {fmt(p.lo)}–{fmt(p.hi)}{unit && ' ' + unit}</div> })}
+      {hoverPhase && <div><i style={{ background: PHASE_COLOR[hoverPhase], opacity: 0.5 }} />{L.phaseTip(L.phaseNames[hoverPhase])}</div>}
     </div>}
     <div className="ext-legend">
       {series.map(s => <span key={s.key}><i className={s.kind === 'dots' ? 'dot' : ''} style={{ background: s.color }} />{s.name}</span>)}
       {bands.map(b => <span key={b.key}><i className="band" style={{ borderColor: b.color, background: b.color }} />{b.name}</span>)}
+      {[...new Set(runs.map(r => r.type))].map(p => <span key={p}><i className="sq" style={{ background: PHASE_COLOR[p], opacity: 0.5 }} />{L.phaseNames[p]}</span>)}
     </div>
   </div>
 }
