@@ -185,6 +185,12 @@ export const L = {
     endBeforeStart: 'Koniec nie może być wcześniej niż początek.',
     overlap: 'Masa i redukcja nie mogą się nakładać. Puste pole „Do” oznacza fazę trwającą.',
   },
+  // ustawienia strażnika siły
+  guardSection: 'Strażnik siły',
+  guardFooter: 'Alert działa tylko na redukcji. Puste pole progu albo 0 to 5%. Zmiana dochodzi do Statystyk+ w ciągu kilku minut.',
+  guardLifts: 'Główne boje',
+  guardLiftsSub: 'Ćwiczenie z dwóch dni planu jest pilnowane osobno dla każdego dnia.',
+  guardThreshold: 'Próg spadku',
   // stan integracji (Etap 2b)
   healthTitle: 'Coś przestało działać',
   healthSection: 'Stan integracji',
