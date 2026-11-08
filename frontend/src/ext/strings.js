@@ -97,7 +97,7 @@ export const L = {
   layoutHomeFooter: 'Przytrzymaj uchwyt, żeby zmienić kolejność kart. Wbudowaną kartę masy ciała wyłączysz w Wygląd i Start.',
   layoutStatsFooter: 'Widoczność sekcji Statystyk+ i ich kolejność w obrębie części; kolejność części jest stała. Chipy włączają pojedyncze kafelki.',
   moveSection: name => `Przesuń: ${name}`,
-  todayTiles: { takeaway: 'Wniosek dnia', readiness: 'Readiness', mass: 'Tempo masy', bb: 'Body Battery', goal: 'Najbliższy cel' },
+  todayTiles: { takeaway: 'Wniosek dnia', readiness: 'Readiness', mass: 'Tempo masy', bb: 'Body Battery', goal: 'Najbliższy cel', guard: 'Spadek siły' },
   energyTiles: { tdeeCard: 'TDEE', weight: 'Waga', protein: 'Białko' },
   numbersTiles: { tdee: 'TDEE', balAdapt: 'Bilans adapt.', balWatch: 'Bilans zegarek', protein: 'Białko', sleep: 'Sen', prs: 'Rekordy' },
   // Regeneracja (Etap 3)
@@ -162,6 +162,7 @@ export const L = {
   // strażnik siły
   guardDrop: r => `${r.exercise}: spadek siły o ${num1(-r.change_pct)}%`,
   guardDetail: r => `Średnia z dwóch sesji ${num1(r.avg_e1rm)} kg, najlepsza ${num1(r.ref_e1rm)} kg z ${fmtDay(r.ref_date)}.`,
+  guardOthers: n => ` (pozostałe: ${n})`,
   guardNoPhases: 'Strażnik siły nie działa, bo nie ma wpisanych faz. Dodasz je w Ustawienia → Wygląd i Start → Dodatki → Fazy.',
   // fazy
   phaseNames: { masa: 'masa', redukcja: 'redukcja', deload: 'deload' },
