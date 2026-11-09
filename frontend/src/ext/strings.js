@@ -1,6 +1,7 @@
 // Polish texts of the fork's extensions. Not in locales/: scripts/check-locales.mjs compares the
 // language packs and a key present in one only would fail upstream's CI.
 const num1 = v => v == null ? '–' : Number(v).toLocaleString('pl-PL', { maximumFractionDigits: 1 })
+const signed2 = v => new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 2, signDisplay: 'exceptZero' }).format(Math.round(v * 100) / 100 + 0)
 const fmtDay = iso => new Date(iso + 'T12:00:00').toLocaleDateString('pl-PL', { day: 'numeric', month: 'numeric', year: 'numeric' })
 
 export const L = {
@@ -15,6 +16,10 @@ export const L = {
   allWeighIns: 'Wszystkie ważenia',
   noWeighIns: 'Brak ważeń. Dodaj wagę, żeby zacząć wykres.',
   maMissing: n => `Za mało ważeń na MA${n}.`,
+  rateTitle: 'Tempo masy',
+  rateLine: (perWeek, pct, unit) => `Tempo ${signed2(perWeek)} ${unit} na tydzień (${signed2(pct)} %)`,
+  rateTooFew: 'Za mało ważeń, żeby policzyć tempo.',
+  rateStatus: { in: 'W normie', slow: 'Za wolno', fast: 'Za szybko', off: 'Poza zakresem' },
   measurements: 'Pomiary',
   measurementHistory: 'Historia pomiarów',
   onHome: 'Strona główna',

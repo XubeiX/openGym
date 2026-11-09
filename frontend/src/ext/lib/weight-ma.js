@@ -4,7 +4,7 @@
 // so a change of the rule on either side fails one of them.
 
 const MIN = { 7: 4, 28: 14 }
-const dayNo = d => Math.round(new Date(d + 'T12:00:00Z').getTime() / 86400000)
+export const dayNo = d => Math.round(new Date(d + 'T12:00:00Z').getTime() / 86400000)
 
 // [{ d, w, ma7, ma28 }] oldest first; ma7 / ma28 null below the minimum.
 export function weightMA(bodyweight) {

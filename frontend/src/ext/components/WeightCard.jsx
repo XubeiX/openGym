@@ -4,10 +4,11 @@ import { dateLocale } from '../../lib/i18n.js'
 import { weighInAt } from '../../lib/bodyweight.js'
 import { bwSheet, goalSheet, bwDeltaColor, weighInsSheet } from '../../sheets.jsx'
 import LineChart from '../../components/LineChart.jsx'
-import WeightRate from '../../components/WeightRate.jsx'
+import { rateGoalSheet } from '../../components/WeightRate.jsx'
 import Icon from '../../components/Icon.jsx'
 import { Button, Segmented } from '../../components/ui.jsx'
 import { weightMA } from '../lib/weight-ma.js'
+import { massRate } from '../lib/mass-rate.js'
 import { extOf, setExt } from '../state.js'
 import { L } from '../strings.js'
 
@@ -25,6 +26,7 @@ export default function WeightCard() {
   // MA to 0.01 like ptv4's dashboard; fmtNum would cut 83.96 to 84
   const fmt = v => avg ? v.toLocaleString(dateLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : fmtNum(v)
   const points = series.slice(-30).map(b => ({ t: b.t, y: b.w, d: b.d }))
+  const { rate, status } = massRate({ bodyweight: S.bodyweight, view: avg, goal: S.rateGoal })
 
   return <div className="card">
     <div className="row between bw-head" style={{ marginBottom: 6 }}>
@@ -51,8 +53,12 @@ export default function WeightCard() {
       <div style={{ marginTop: 10 }}><Segmented className="seg-range" value={avg} onChange={v => setExt({ weightAvg: v })}
         options={[{ value: 0, label: L.weighIns }, { value: 7, label: 'MA7' }, { value: 28, label: 'MA28' }]} /></div>
       {points.length > 0 && <div className="chart" style={{ marginTop: 8 }}><LineChart points={points} h={130} unit={S.unit} goal={S.targetW} /></div>}
-      {/* upstream's weekly rate and corridor (#759), as on the built-in card */}
-      <WeightRate S={S} />
+      <button type="button" className="bw-rate small" onClick={rateGoalSheet} aria-label={L.rateTitle}>
+        <Icon name="chartLine" style={{ fontSize: 'var(--fs-footnote)' }} />
+        <span className="bw-rate-t">{rate.enough ? L.rateLine(rate.perWeek, rate.pct, S.unit) : L.rateTooFew}</span>
+        {status && <b style={{ color: status === 'in' ? 'var(--acc-ink)' : 'var(--gold-ink)' }}>{L.rateStatus[status]}</b>}
+        <Icon name="chevronRight" className="dim" style={{ fontSize: 'var(--fs-caption2)', marginInlineStart: 'auto' }} />
+      </button>
       <div className="row" style={{ justifyContent: 'flex-end', marginTop: 4 }}>
         <Button size="sm" variant="ghost" trailingIcon="chevronRight" onClick={weighInsSheet}>{L.allWeighIns}</Button>
       </div>
