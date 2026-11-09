@@ -20,7 +20,9 @@ export const DEFAULT_STALL_PCT = 0.2
 // How much older than asked a point of the average may be.
 const SLACK_DAYS = 3
 
-// An average's value now minus its value `days` ago, and the value now; null without such points.
+// An average's value now minus its value `days` ago, and what a percent of it is taken of: MA7 now, as on
+// the "Tempo masy, 28 dni" tile (analyze.py kpi_rows), or the average itself while MA7 has too few weigh-ins.
+// Null without such points.
 function maChange(bodyweight, key, days, today) {
   const pts = weightMA(bodyweight).filter(r => r[key] != null && r.d <= today)
   const last = pts.at(-1)
@@ -28,7 +30,7 @@ function maChange(bodyweight, key, days, today) {
   const ageOf = r => dayNo(last.d) - dayNo(r.d)
   const base = pts.findLast(r => ageOf(r) >= days)
   if (!base || ageOf(base) > days + SLACK_DAYS) return null
-  return { change: last[key] - base[key], value: last[key] }
+  return { change: last[key] - base[key], value: last.ma7 ?? last[key] }
 }
 
 function viewRate(bodyweight, view, now) {

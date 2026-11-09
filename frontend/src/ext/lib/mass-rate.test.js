@@ -61,7 +61,13 @@ describe('massRate: the average views', () => {
     const { rate } = massRate({ bodyweight, view: 28, now: NOW })
     // The tile (analyze.py): the change of MA7 over 28 days, divided by 4.
     expect(rate.perWeek).toBeCloseTo((ma7At(0) - ma7At(28)) / 4, 5)
-    expect(rate.pct).toBeCloseTo((ma7At(0) - ma7At(28)) / 4 / ma7At(0) * 100, 1)
+    expect(rate.pct).toBeCloseTo((ma7At(0) - ma7At(28)) / 4 / ma7At(0) * 100, 5)
+  })
+
+  it('MA28 takes its percent of MA28 now while MA7 has too few weigh-ins', () => {
+    // Nothing 1 to 6 days ago: no MA7 today, MA28 today is 87.6227.
+    const { rate } = massRate({ bodyweight: without(1, 6), view: 28, now: NOW })
+    expect(rate.pct).toBeCloseTo(rate.perWeek / 87.6227 * 100, 3)
   })
 })
 
