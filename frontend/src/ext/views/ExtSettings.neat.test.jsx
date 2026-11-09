@@ -57,8 +57,9 @@ describe('Dodatki: the Sygnał NEAT threshold', () => {
     expect(rowOf(host).textContent).toContain('25%')
   })
 
-  it('stays with the Trend NEAT tile switched off', () => {
+  it('stays with the Home card and the Statystyki+ tile switched off', () => {
+    const home = withSection({}, 'home', 'neat', { on: false })
     const stats = withSection({}, 'stats', 'daily', { tiles: { steps: false } })
-    expect(rowOf(mount({ layout: { stats } }))).toBeTruthy()
+    expect(rowOf(mount({ layout: { home, stats } }))).toBeTruthy()
   })
 })
