@@ -64,6 +64,11 @@ cd frontend && npm run build:mobile   # VITE_MOBILE build + 180 px media from ca
 
 There is no linter/formatter config and no TypeScript; match the existing style by hand.
 
+On Windows many tests fail for known reasons (CRLF, POSIX-only features, path separators). Before
+investigating a failure or re-running it in a worktree, compare it with
+[docs/agents/windows-tests.md](docs/agents/windows-tests.md). In a worktree, never start the api or
+Vite on the default ports: that file gives each worktree its own ports and `DATA_DIR`.
+
 GitHub (`github.com/DuarteSantos8/openGym`) is the home of the project; `.github/workflows/mirror.yml`
 pushes `main` and `v*` tags to the GitLab mirror (fast-forward only, never push or merge there).
 Pull requests are gated by `.github/workflows/test.yml`; `ios.yml` compiles the iPhone app on a Mac
@@ -186,3 +191,21 @@ never feed the media to an AI tool.
 - Training-logic changes (progression, 1RM, session read-back) need a unit test in `src/lib`
   beside the code.
 - User-facing text: plain and human, no em dashes. CHANGELOG.md is written at release time.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in this repo's GitHub Issues (`gh` CLI). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+### Questions from skills
+
+Skills that interview the user (`grilling`, `grill-with-docs` and the like) ask through AskUserQuestion, one question at a time, instead of the numbered round in the message. Each question stands on its own and the recommended option goes first.
