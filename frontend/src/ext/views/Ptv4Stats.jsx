@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../store/useStore.js'
 import Icon from '../../components/Icon.jsx'
 import { SelectRow } from '../../components/ui.jsx'
-import { usePtv4, at } from '../lib/ptv4.js'
+import { usePtv4, at, since } from '../lib/ptv4.js'
 import ExtChart from '../components/ExtChart.jsx'
 import NeatCard from '../components/NeatCard.jsx'
-import { RANGES, since, useRange, RangeSwitch } from '../components/ChartRange.jsx'
-import { L } from '../strings.js'
+import { RANGES, useRange, RangeSwitch } from '../components/ChartRange.jsx'
+import { L, int } from '../strings.js'
 import { layoutOf, groupsOf } from '../layout.js'
 import { extOf } from '../state.js'
 import { baseName } from '../lib/goals.js'
@@ -105,8 +105,7 @@ function Energy({ energy, body, tiles }) {
 function Recovery({ k, daily, perf, tiles }) {
   const rr = useRange('readiness'), rh = useRange('hrv'), rt = useRange('rhr')
   const dR = since(daily, 'date', RANGES[rr]), dH = since(daily, 'date', RANGES[rh]), dT = since(daily, 'date', RANGES[rt])
-  const int = v => Math.round(v).toLocaleString('pl-PL')
-  const kpi = { readiness: [k?.ready_txt, k?.ready_sub], hrv: [k?.hrv_txt, k?.hrv_sub], rhr: [k?.rhr_txt, k?.rhr_sub], bb: [k?.bb_txt, k?.bb_sub] }
+  const kpi ={ readiness: [k?.ready_txt, k?.ready_sub], hrv: [k?.hrv_txt, k?.hrv_sub], rhr: [k?.rhr_txt, k?.rhr_sub], bb: [k?.bb_txt, k?.bb_sub] }
   const card = (id, title, note, chart) => tiles[id] !== false && <div className="card">
     <div className="row between"><h2 style={{ margin: 0 }}>{title}</h2><span className="small muted">{L.byPtv4}</span></div>
     <div className="small muted" style={{ marginTop: 4 }}>{note}</div>

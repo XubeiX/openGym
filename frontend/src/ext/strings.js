@@ -1,5 +1,6 @@
 // Polish texts of the fork's extensions. Not in locales/: scripts/check-locales.mjs compares the
 // language packs and a key present in one only would fail upstream's CI.
+export const int = v => Math.round(v).toLocaleString('pl-PL')
 const num1 = v => v == null ? '–' : Number(v).toLocaleString('pl-PL', { maximumFractionDigits: 1 })
 const signed2 = v => new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 2, signDisplay: 'exceptZero' }).format(Math.round(v * 100) / 100 + 0)
 const fmtDay = iso => new Date(iso + 'T12:00:00').toLocaleDateString('pl-PL', { day: 'numeric', month: 'numeric', year: 'numeric' })

@@ -80,3 +80,5 @@ export function usePtv4(sets, { fresh = false, persist = true } = {}) {
 
 // A date row → a chart point (ms).
 export const at = iso => new Date(iso + 'T12:00:00').getTime()
+// The rows of the last `days` days, by their `date` field.
+export const since = (rows, date, days) => { const cut = Date.now() - days * 86400000; return rows.filter(r => at(r[date]) >= cut) }
