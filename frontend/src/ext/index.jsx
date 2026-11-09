@@ -16,7 +16,7 @@ import { hasSteps } from './lib/neat.js'
 // Offline, signed out or no steps from ptv4 → the card is not there, like "Dziś".
 function HomeNeatCard() {
   const rows = usePtv4(['body']).data?.body
-  return rows?.some(hasSteps) ? <NeatCard rows={rows} /> : null
+  return Array.isArray(rows) && rows.some(hasSteps) ? <NeatCard rows={rows} /> : null
 }
 
 const CARDS = { checks: DataCheckCard, today: TodayCard, weight: WeightCard, recent: RecentMeasurementsCard, neat: HomeNeatCard }
