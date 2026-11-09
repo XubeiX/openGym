@@ -136,6 +136,7 @@ export const L = {
   volumeBands: ['poniżej 4 (utrzymanie)', '4–10 (niska)', '10–20 (docelowa)', 'powyżej 20 (wysoka)'],
   sleepChart: 'Sen dziennie', neatTitle: 'Trend NEAT',
   neatSignal: s => `Spadek aktywności: średnia z 7 dni to ${Math.round(s.avg).toLocaleString('pl-PL')} kroków, o ${num1(-s.pct)}% mniej niż w 28 dniach wcześniej.`,
+  neatCardSub: 'Kroki dzień po dniu ze średnią MA7 albo MA28, jak w Statystykach+.',
   homeTileSub: 'TDEE, bilans, waga i białko liczone przez ptv4',
   // cele e1RM (Etap 4d)
   goalsSection: 'Cele',

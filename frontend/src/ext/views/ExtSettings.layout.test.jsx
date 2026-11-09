@@ -29,6 +29,24 @@ const press = (name, key) => act(() => handle(name).dispatchEvent(new KeyboardEv
 const order = () => layoutOf(mocks.S.ext, 'stats').map(s => s.id)
 const start = ['numbers', 'energy', 'recovery', 'strength', 'goals', 'volume', 'daily']
 
+describe('Home layout editor', () => {
+  const homeOrder = () => layoutOf(mocks.S.ext, 'home').map(s => s.id)
+  it('moves Trend NEAT like any other card', () => {
+    mount()
+    press('Trend NEAT', 'ArrowUp')
+    expect(homeOrder()).toEqual(['checks', 'today', 'weight', 'neat', 'recent'])
+  })
+  it('switches Trend NEAT off and on', () => {
+    mount()
+    const flip = () => act(() => host.querySelector('[aria-label="Trend NEAT"]').click())
+    const on = () => layoutOf(mocks.S.ext, 'home').find(s => s.id === 'neat').on
+    flip()
+    expect(on()).toBe(false)
+    flip()
+    expect(on()).toBe(true)
+  })
+})
+
 describe('Statystyki+ layout editor', () => {
   it('moves a section inside its part', () => {
     mount()

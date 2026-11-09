@@ -9,8 +9,16 @@ import DataCheckCard from './components/DataCheckCard.jsx'
 import TodayCard from './components/TodayCard.jsx'
 import WeightCard from './components/WeightCard.jsx'
 import RecentMeasurementsCard from './components/RecentMeasurementsCard.jsx'
+import NeatCard from './components/NeatCard.jsx'
+import { usePtv4 } from './lib/ptv4.js'
 
-const CARDS = { checks: DataCheckCard, today: TodayCard, weight: WeightCard, recent: RecentMeasurementsCard }
+// Offline, signed out or no steps from ptv4 → the card is not there, like "Dziś".
+function HomeNeatCard() {
+  const rows = usePtv4(['body']).data?.body
+  return rows?.some(r => r.steps > 0) ? <NeatCard rows={rows} /> : null
+}
+
+const CARDS = { checks: DataCheckCard, today: TodayCard, weight: WeightCard, recent: RecentMeasurementsCard, neat: HomeNeatCard }
 
 export function ExtHomeCards() {
   const ext = extOf(useStore(s => s.S))
