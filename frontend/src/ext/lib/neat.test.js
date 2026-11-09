@@ -70,6 +70,12 @@ describe('neatTrend signal', () => {
     expect(s).toEqual({ avg: 8500, base: 10000, pct: -15 })
   })
 
+  it('is active at exactly the threshold when the averages are not whole numbers', () => {
+    // Yesterday's 7 days add up to 12906 against 57360 in the 28 before them: exactly 10% under, 1843.71 against 2048.57.
+    const steps = i => i <= 4 ? 3150 : i <= 7 ? 102 : i <= 23 ? 2049 : 2048
+    expect(signal(history(steps), 10)).not.toBeNull()
+  })
+
   it('is off when the drop is smaller than the threshold', () => {
     expect(signal(exactly15, 20)).toBeNull()
   })
