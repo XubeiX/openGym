@@ -10,6 +10,7 @@ import { extOf, setExt, setExtIn } from '../state.js'
 import { L } from '../strings.js'
 import GoalsSettings from '../components/GoalsSettings.jsx'
 import PhasesSettings from '../components/PhasesSettings.jsx'
+import RateCorridorSettings from '../components/RateCorridorSettings.jsx'
 import GuardSettings from '../components/GuardSettings.jsx'
 
 const HOURS = Array.from({ length: 24 }, (_, h) => ({ value: h, label: `${h}:00` }))
@@ -88,6 +89,7 @@ export default function ExtSettings() {
     <LayoutList ext={ext} where="stats" title={L.statsTitle} footer={L.layoutStatsFooter} />
     <GoalsSettings ext={ext} />
     <PhasesSettings ext={ext} />
+    <RateCorridorSettings ext={ext} unit={S.unit} />
     <GuardSettings ext={ext} />
 
     {checksOn && <Section title={L.checksSection} footer={L.checksFooter}>

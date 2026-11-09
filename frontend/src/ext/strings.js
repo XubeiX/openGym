@@ -19,7 +19,7 @@ export const L = {
   rateTitle: 'Tempo masy',
   rateLine: (perWeek, pct, unit) => `Tempo ${signed2(perWeek)} ${unit} na tydzień (${signed2(pct)} %)`,
   rateTooFew: 'Za mało ważeń, żeby policzyć tempo.',
-  rateStatus: { in: 'W normie', slow: 'Za wolno', fast: 'Za szybko', off: 'Poza zakresem' },
+  rateStatus: { in: 'W normie', slow: 'Za wolno', fast: 'Za szybko' },
   measurements: 'Pomiary',
   measurementHistory: 'Historia pomiarów',
   onHome: 'Strona główna',
@@ -191,6 +191,14 @@ export const L = {
     endBeforeStart: 'Koniec nie może być wcześniej niż początek.',
     overlap: 'Masa i redukcja nie mogą się nakładać. Puste pole „Do” oznacza fazę trwającą.',
   },
+  // korytarze tempa
+  corridorsSection: 'Korytarze tempa',
+  corridorsFooter: 'Karta wagi ocenia tempo według korytarza trwającej fazy. Redukcja to spadek masy, masa to przyrost. W deloadzie i poza tymi fazami karta pokazuje samo tempo.',
+  corridorTitles: { redukcja: 'Korytarz redukcji', masa: 'Korytarz masy' },
+  corridorPerWeek: 'na tydzień',
+  corridorFrom: 'Od',
+  corridorTo: 'Do',
+  corridorField: (title, bound) => `${title}: ${bound}`,
   // ustawienia strażnika siły
   guardSection: 'Strażnik siły',
   guardFooter: 'Strażnik siły pilnuje spadku siły tylko na redukcji. Puste pole progu albo 0 to 5%. Zmiana dochodzi do Statystyk+ w ciągu kilku minut.',

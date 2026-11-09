@@ -65,19 +65,40 @@ describe('massRate: the average views', () => {
   })
 })
 
-describe('massRate: the verdict on the manual corridor', () => {
-  // +2 kg on the last 3 days: MA28 -0.49 a week, MA7 +0.16 a week.
-  const rebound = () => daily().map((b, i, a) => a.length - 1 - i < 3 ? { ...b, w: b.w + 2 } : b)
-  const cut = { dir: 'lose', by: 'w', lo: 0.4, hi: 1 }
+describe('massRate: the verdict by phase', () => {
+  // +2 kg on the last 3 days: MA28 -0.49 a week (-0.56 %), MA7 +0.16 a week.
+  const bodyweight = daily().map((b, i, a) => a.length - 1 - i < 3 ? { ...b, w: b.w + 2 } : b)
+  const status = (ext, view) => massRate({ bodyweight, view, ext, now: NOW }).status
+  const cut = [{ type: 'redukcja', start: ago(30) }], bulk = [{ type: 'masa', start: ago(30) }]
 
-  it('judges the number of the chosen view', () => {
-    const bodyweight = rebound()
-    expect(massRate({ bodyweight, view: 28, goal: cut, now: NOW }).status).toBe('in')
-    expect(massRate({ bodyweight, view: 7, goal: cut, now: NOW }).status).toBe('slow')
+  it('on a redukcja judges the chosen view against 0.5 to 1 % a week by default', () => {
+    expect(status({ phases: cut }, 28)).toBe('in')
+    expect(status({ phases: cut }, 7)).toBe('slow')
   })
 
-  it('has no verdict without a corridor or a number', () => {
-    expect(massRate({ bodyweight: daily(), view: 7, now: NOW }).status).toBeNull()
-    expect(massRate({ bodyweight: [], view: 7, goal: cut, now: NOW }).status).toBeNull()
+  it('on a masa judges the chosen view against 0.1 to 0.2 kg a week by default', () => {
+    expect(status({ phases: bulk }, 7)).toBe('in')
+    expect(status({ phases: bulk }, 28)).toBe('slow')
+  })
+
+  it('uses the corridor saved for that phase, in its own unit', () => {
+    const rateCorridors = { redukcja: { by: 'w', lo: 0.1, hi: 0.3 } }
+    expect(status({ phases: cut, rateCorridors }, 28)).toBe('fast')
+    expect(status({ phases: bulk, rateCorridors }, 7)).toBe('in')
+  })
+
+  it('has no verdict in a deload, even inside a redukcja', () => {
+    expect(status({ phases: [...cut, { type: 'deload', start: ago(2), end: ago(0) }] }, 28)).toBeNull()
+  })
+
+  it('has no verdict outside a redukcja or a masa', () => {
+    expect(status({}, 28)).toBeNull()
+    expect(status({ phases: [{ type: 'redukcja', start: ago(30), end: ago(1) }] }, 28)).toBeNull()
+    expect(status({ phases: [{ type: 'masa', start: '2026-07-01' }] }, 28)).toBeNull()
+  })
+
+  it('has no verdict without a number, but the phase keeps its rate line', () => {
+    expect(massRate({ bodyweight: [], view: 7, ext: { phases: cut }, now: NOW }).status).toBeNull()
+    expect(massRate({ bodyweight, view: 28, ext: {}, now: NOW }).rate.enough).toBe(true)
   })
 })

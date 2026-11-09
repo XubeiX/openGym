@@ -4,6 +4,15 @@
 import { weightRate, rateStatus } from '../../lib/bodyweight.js'
 import { isoOf } from '../../lib/format.js'
 import { dayNo, weightMA } from './weight-ma.js'
+import { phaseOn, phasesOf } from './phases.js'
+
+// Korytarz tempa of each phase with a direction. S.ext.rateCorridors = { redukcja?, masa? }, each a whole
+// { by: '%' | 'w', lo, hi }: unsigned bounds per week, 'w' = the profile's unit as in S.rateGoal.
+// No entry = these defaults. ptv4 reads the same shape.
+export const DEFAULT_CORRIDORS = { redukcja: { by: '%', lo: 0.5, hi: 1 }, masa: { by: 'w', lo: 0.1, hi: 0.2 } }
+const PHASE_DIR = { redukcja: 'lose', masa: 'gain' }
+
+export const corridorOf = (ext, type) => ext?.rateCorridors?.[type] || DEFAULT_CORRIDORS[type]
 
 // How much older than asked a point of the average may be.
 const SLACK_DAYS = 3
@@ -25,9 +34,15 @@ function viewRate(bodyweight, view, now) {
   return c ? { enough: true, perWeek: c.change, pct: c.change / c.value * 100 } : { enough: false }
 }
 
-// view: 0 weigh-ins, 7 / 28 that average. goal: rateStatus's corridor, or nothing.
-// { rate: { enough, perWeek?, pct? }, status: 'in' | 'slow' | 'fast' | 'off' | null }
-export function massRate({ bodyweight, view, goal, now = Date.now() }) {
+// rateStatus's corridor for the phase running on a day; null in a deload and outside redukcja and masa.
+function phaseGoal(ext, day) {
+  const type = phaseOn(phasesOf(ext), day, day)
+  return PHASE_DIR[type] ? { ...corridorOf(ext, type), dir: PHASE_DIR[type] } : null
+}
+
+// view: 0 weigh-ins, 7 / 28 that average. ext: S.ext, for its phases and corridors.
+// { rate: { enough, perWeek?, pct? }, status: 'in' | 'slow' | 'fast' | null }
+export function massRate({ bodyweight, view, ext, now = Date.now() }) {
   const rate = viewRate(bodyweight, view, now)
-  return { rate, status: rateStatus(rate, goal) }
+  return { rate, status: rateStatus(rate, phaseGoal(ext, isoOf(new Date(now)))) }
 }

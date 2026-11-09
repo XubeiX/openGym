@@ -1,10 +1,10 @@
+import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../store/useStore.js'
 import { fmtDate, fmtNum } from '../../lib/format.js'
 import { dateLocale } from '../../lib/i18n.js'
 import { weighInAt } from '../../lib/bodyweight.js'
 import { bwSheet, goalSheet, bwDeltaColor, weighInsSheet } from '../../sheets.jsx'
 import LineChart from '../../components/LineChart.jsx'
-import { rateGoalSheet } from '../../components/WeightRate.jsx'
 import Icon from '../../components/Icon.jsx'
 import { Button, Segmented } from '../../components/ui.jsx'
 import { weightMA } from '../lib/weight-ma.js'
@@ -15,8 +15,10 @@ import { L } from '../strings.js'
 // The built-in body weight card (views/Home.jsx) with a Weigh-ins / MA7 / MA28 switch counted
 // like ptv4's dashboard. The built-in one is turned off with its own Settings switch (S.showWeightCard).
 export default function WeightCard() {
+  const nav = useNavigate()
   const S = useStore(s => s.S)
-  const avg = extOf(S).weightAvg
+  const ext = extOf(S)
+  const avg = ext.weightAvg
   const key = avg ? 'ma' + avg : 'w'
   const byDay = new Map(S.bodyweight.map(b => [b.d, b]))
   const series = weightMA(S.bodyweight).filter(r => r[key] != null)
@@ -26,7 +28,7 @@ export default function WeightCard() {
   // MA to 0.01 like ptv4's dashboard; fmtNum would cut 83.96 to 84
   const fmt = v => avg ? v.toLocaleString(dateLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : fmtNum(v)
   const points = series.slice(-30).map(b => ({ t: b.t, y: b.w, d: b.d }))
-  const { rate, status } = massRate({ bodyweight: S.bodyweight, view: avg, goal: S.rateGoal })
+  const { rate, status } = massRate({ bodyweight: S.bodyweight, view: avg, ext })
 
   return <div className="card">
     <div className="row between bw-head" style={{ marginBottom: 6 }}>
@@ -53,7 +55,7 @@ export default function WeightCard() {
       <div style={{ marginTop: 10 }}><Segmented className="seg-range" value={avg} onChange={v => setExt({ weightAvg: v })}
         options={[{ value: 0, label: L.weighIns }, { value: 7, label: 'MA7' }, { value: 28, label: 'MA28' }]} /></div>
       {points.length > 0 && <div className="chart" style={{ marginTop: 8 }}><LineChart points={points} h={130} unit={S.unit} goal={S.targetW} /></div>}
-      <button type="button" className="bw-rate small" onClick={rateGoalSheet} aria-label={L.rateTitle}>
+      <button type="button" className="bw-rate small" onClick={() => nav('/settings/ext', { state: { find: L.corridorTitles.redukcja } })} aria-label={L.rateTitle}>
         <Icon name="chartLine" style={{ fontSize: 'var(--fs-footnote)' }} />
         <span className="bw-rate-t">{rate.enough ? L.rateLine(rate.perWeek, rate.pct, S.unit) : L.rateTooFew}</span>
         {status && <b style={{ color: status === 'in' ? 'var(--acc-ink)' : 'var(--gold-ink)' }}>{L.rateStatus[status]}</b>}
