@@ -13,7 +13,7 @@ describe('layoutOf', () => {
 
   it('keeps a reordered layout', () => {
     const ext = { layout: { home: moved(layoutOf({}, 'home'), 2, 0) } }
-    expect(ids(layoutOf(ext, 'home'))).toEqual(['weight', 'checks', 'today', 'recent'])
+    expect(ids(layoutOf(ext, 'home'))).toEqual(['weight', 'checks', 'today', 'recent', 'neat'])
   })
 
   it('keeps a section and a tile switched off', () => {
@@ -27,9 +27,16 @@ describe('layoutOf', () => {
   it('a section or tile new to the registry joins at the end, switched on; an unknown id is dropped', () => {
     const ext = { layout: { home: [{ id: 'today', on: true, tiles: { mass: false } }, { id: 'gone', on: true, tiles: {} }] } }
     const l = layoutOf(ext, 'home')
-    expect(ids(l)).toEqual(['today', 'checks', 'weight', 'recent'])
+    expect(ids(l)).toEqual(['today', 'checks', 'weight', 'recent', 'neat'])
     expect(l[0].tiles).toEqual({ takeaway: true, readiness: true, mass: false, bb: true, goal: true, guard: true, rateSignal: true })
     expect(l[1].on).toBe(true)
+  })
+
+  it('Trend NEAT joins a layout saved before it at the end, switched on, the saved order untouched', () => {
+    const saved = ['recent', 'weight', 'today', 'checks'].map(id => ({ id, on: id !== 'weight', tiles: {} }))
+    const l = layoutOf({ layout: { home: saved } }, 'home')
+    expect(ids(l)).toEqual(['recent', 'weight', 'today', 'checks', 'neat'])
+    expect(l.map(s => s.on)).toEqual([true, false, true, true, true])
   })
 
   it('keeps the parts of Statystyki+ in their fixed order and the saved order inside each', () => {

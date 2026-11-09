@@ -8,6 +8,7 @@ export const REGISTRY = {
     { id: 'today', tiles: ['takeaway', 'guard', 'rateSignal', 'readiness', 'mass', 'bb', 'goal'] },
     { id: 'weight', tiles: [] },
     { id: 'recent', tiles: [] },
+    { id: 'neat', tiles: [] },
   ],
   stats: [
     { id: 'numbers', tiles: ['tdee', 'balAdapt', 'balWatch', 'protein', 'sleep', 'prs'] },

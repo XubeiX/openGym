@@ -135,6 +135,7 @@ export const L = {
   volumeNote: 'Seria bezpośrednia = 1, pośrednia = 0,5. Pasmo docelowe 10–20 serii/tydz. (Schoenfeld 2017, Pelland 2024).',
   volumeBands: ['poniżej 4 (utrzymanie)', '4–10 (niska)', '10–20 (docelowa)', 'powyżej 20 (wysoka)'],
   sleepChart: 'Sen dziennie', neatTitle: 'Trend NEAT',
+  neatCardSub: 'Kroki dzień po dniu ze średnią MA7 albo MA28, jak w Statystykach+.',
   homeTileSub: 'TDEE, bilans, waga i białko liczone przez ptv4',
   // cele e1RM (Etap 4d)
   goalsSection: 'Cele',

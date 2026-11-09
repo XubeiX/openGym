@@ -30,6 +30,7 @@ const SECTIONS = {
     today: { title: L.todayCardTitle, sub: L.todayCardSub, icon: 'sparkles', tint: 'var(--purple)', tiles: L.todayTiles },
     weight: { title: L.weightCardTitle, sub: L.weightCardSub, icon: 'scale', tint: 'var(--green)' },
     recent: { title: L.recentCardTitle, sub: L.recentCardSub, icon: 'ruler', tint: 'var(--teal)' },
+    neat: { title: L.neatTitle, sub: L.neatCardSub, icon: 'chartLine', tint: 'var(--blue)' },
   },
   stats: {
     numbers: { title: L.sections.numbers, icon: 'chartLine', tint: 'var(--blue)', tiles: L.numbersTiles },
