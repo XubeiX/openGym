@@ -28,7 +28,7 @@ export default function WeightCard() {
   // MA to 0.01 like ptv4's dashboard; fmtNum would cut 83.96 to 84
   const fmt = v => avg ? v.toLocaleString(dateLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : fmtNum(v)
   const points = series.slice(-30).map(b => ({ t: b.t, y: b.w, d: b.d }))
-  const { rate, status } = massRate({ bodyweight: S.bodyweight, view: avg, ext })
+  const { rate, status, signal } = massRate({ bodyweight: S.bodyweight, view: avg, ext })
 
   return <div className="card">
     <div className="row between bw-head" style={{ marginBottom: 6 }}>
@@ -61,6 +61,7 @@ export default function WeightCard() {
         {status && <b style={{ color: status === 'in' ? 'var(--acc-ink)' : 'var(--gold-ink)' }}>{L.rateStatus[status]}</b>}
         <Icon name="chevronRight" className="dim" style={{ fontSize: 'var(--fs-caption2)', marginInlineStart: 'auto' }} />
       </button>
+      {signal && <div className="small" style={{ color: 'var(--red)', fontWeight: 600 }}>{L.rateSignal[signal]}</div>}
       <div className="row" style={{ justifyContent: 'flex-end', marginTop: 4 }}>
         <Button size="sm" variant="ghost" trailingIcon="chevronRight" onClick={weighInsSheet}>{L.allWeighIns}</Button>
       </div>

@@ -20,7 +20,7 @@ describe('layoutOf', () => {
     let ext = { layout: { home: withSection({}, 'home', 'today', { tiles: { readiness: false } }) } }
     ext = { layout: { home: withSection(ext, 'home', 'recent', { on: false }) } }
     const l = layoutOf(ext, 'home')
-    expect(l.find(s => s.id === 'today').tiles).toEqual({ takeaway: true, readiness: false, mass: true, bb: true, goal: true, guard: true })
+    expect(l.find(s => s.id === 'today').tiles).toEqual({ takeaway: true, readiness: false, mass: true, bb: true, goal: true, guard: true, rateSignal: true })
     expect(l.find(s => s.id === 'recent').on).toBe(false)
   })
 
@@ -28,7 +28,7 @@ describe('layoutOf', () => {
     const ext = { layout: { home: [{ id: 'today', on: true, tiles: { mass: false } }, { id: 'gone', on: true, tiles: {} }] } }
     const l = layoutOf(ext, 'home')
     expect(ids(l)).toEqual(['today', 'checks', 'weight', 'recent'])
-    expect(l[0].tiles).toEqual({ takeaway: true, readiness: true, mass: false, bb: true, goal: true, guard: true })
+    expect(l[0].tiles).toEqual({ takeaway: true, readiness: true, mass: false, bb: true, goal: true, guard: true, rateSignal: true })
     expect(l[1].on).toBe(true)
   })
 

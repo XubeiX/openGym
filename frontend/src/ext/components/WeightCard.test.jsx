@@ -77,3 +77,21 @@ describe('mass rate on the weight card', () => {
     expect(useUI.getState().sheets).toHaveLength(0)
   })
 })
+
+describe('sygnał tempa on the weight card', () => {
+  // The 14 days of the log: MA7 falling 1.4 kg, 0.7 kg a week, about 0.8 %.
+  const steady = Array.from({ length: 41 }, (_, i) => ({ d: days(i), w: Math.round((86 + i * 0.1) * 10) / 10, t: 1 })).reverse()
+
+  it('shows the active signal, the same in every view', () => {
+    install({ bodyweight: steady, ext: { phases: [{ type: 'redukcja', start: days(30) }], rateCorridors: { redukcja: { by: '%', lo: 0.1, hi: 0.5 } } } })
+    const host = render(<WeightCard />)
+    expect(host.textContent).toContain('masa spada za szybko')
+    pick(host, 'MA28')
+    expect(host.textContent).toContain('masa spada za szybko')
+  })
+
+  it('has no signal without one', () => {
+    install({ bodyweight: steady, ext: { phases: [{ type: 'redukcja', start: days(30) }] } })
+    expect(render(<WeightCard />).textContent).not.toContain('w 14 dni')
+  })
+})

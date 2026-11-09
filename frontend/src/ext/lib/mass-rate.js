@@ -14,6 +14,9 @@ const PHASE_DIR = { redukcja: 'lose', masa: 'gain' }
 
 export const corridorOf = (ext, type) => ext?.rateCorridors?.[type] || DEFAULT_CORRIDORS[type]
 
+// S.ext.rateStallPct, in % of body weight over 14 days. No entry = this. ptv4 can read the same key.
+export const DEFAULT_STALL_PCT = 0.2
+
 // How much older than asked a point of the average may be.
 const SLACK_DAYS = 3
 
@@ -40,9 +43,21 @@ function phaseGoal(ext, day) {
   return PHASE_DIR[type] ? { ...corridorOf(ext, type), dir: PHASE_DIR[type] } : null
 }
 
-// view: 0 weigh-ins, 7 / 28 that average. ext: S.ext, for its phases and corridors.
-// { rate: { enough, perWeek?, pct? }, status: 'in' | 'slow' | 'fast' | null }
+// Sygnał tempa: always MA7 over 14 days, whatever view the card is on. Null without a corridor phase or the data.
+function rateSignal(bodyweight, ext, day) {
+  const goal = phaseGoal(ext, day)
+  const c = goal && maChange(bodyweight, 'ma7', 14, day)
+  if (!c) return null
+  const perWeek = c.change / 2, pct = perWeek / c.value * 100
+  if (rateStatus({ enough: true, perWeek, pct }, goal) === 'fast') return goal.dir === 'lose' ? 'cutFast' : 'bulkFast'
+  // Two decimals, as rateStatus reads the corridor.
+  const fell = Math.round(-pct * 200) / 100
+  return goal.dir === 'lose' && fell < (ext?.rateStallPct ?? DEFAULT_STALL_PCT) ? 'stall' : null
+}
+
+// view: 0 weigh-ins, 7 / 28 that average. ext: S.ext, for its phases, corridors and stall threshold.
+// { rate: { enough, perWeek?, pct? }, status: 'in' | 'slow' | 'fast' | null, signal: 'stall' | 'cutFast' | 'bulkFast' | null }
 export function massRate({ bodyweight, view, ext, now = Date.now() }) {
-  const rate = viewRate(bodyweight, view, now)
-  return { rate, status: rateStatus(rate, phaseGoal(ext, isoOf(new Date(now)))) }
+  const rate = viewRate(bodyweight, view, now), day = isoOf(new Date(now))
+  return { rate, status: rateStatus(rate, phaseGoal(ext, day)), signal: rateSignal(bodyweight, ext, day) }
 }

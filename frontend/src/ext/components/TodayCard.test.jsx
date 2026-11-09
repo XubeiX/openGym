@@ -3,6 +3,8 @@
 import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { DEF, useStore } from '../../store/useStore.js'
+import { isoOf } from '../../lib/format.js'
 import TodayCard from './TodayCard.jsx'
 
 const mocks = vi.hoisted(() => ({ guard: [] }))
@@ -11,7 +13,8 @@ vi.mock('../lib/ptv4.js', async importOriginal => ({ ...await importOriginal(), 
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 let root, host
-afterEach(() => { act(() => root.unmount()); host.remove() })
+const originalS = useStore.getState().S
+afterEach(() => { act(() => root.unmount()); host.remove(); useStore.setState({ S: originalS }) })
 function mount(guard, tiles) {
   mocks.guard = guard
   host = document.createElement('div'); document.body.appendChild(host)
@@ -32,5 +35,29 @@ describe('TodayCard: strength guard line', () => {
   it('has no line when switched off in the layout', () => {
     mount([DROP], { guard: false })
     expect(host.textContent).not.toContain('spadek siły')
+  })
+})
+
+describe('TodayCard: sygnał tempa line', () => {
+  const days = i => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - i); return isoOf(d) }
+  // Flat for 40 days: on a redukcja the weight stands.
+  const flat = Array.from({ length: 41 }, (_, i) => ({ d: days(i), w: 80 })).reverse()
+  const install = ext => useStore.setState({ S: { ...structuredClone(DEF), bodyweight: flat, ext } })
+  const CUT = { phases: [{ type: 'redukcja', start: days(30) }] }
+
+  it('shows the line while a signal is active', () => {
+    install(CUT)
+    mount([])
+    expect(host.textContent).toContain('Redukcja: w 14 dni masa stoi')
+  })
+  it('has no line without one', () => {
+    install({})
+    mount([])
+    expect(host.textContent).not.toContain('w 14 dni')
+  })
+  it('has no line when switched off in the layout', () => {
+    install(CUT)
+    mount([], { rateSignal: false })
+    expect(host.textContent).not.toContain('w 14 dni')
   })
 })

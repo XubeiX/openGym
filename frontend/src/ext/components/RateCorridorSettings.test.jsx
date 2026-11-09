@@ -63,6 +63,21 @@ describe('Dodatki: rate corridors', () => {
     expect(rowOf('Korytarz redukcji').textContent).toContain('kg')
   })
 
+  it('shows 0.2 % as the default stall threshold and saves a typed one', () => {
+    show({})
+    expect(field('Próg stania w miejscu').value).toBe('')
+    expect(field('Próg stania w miejscu').placeholder).toBe('0.2')
+    type('Próg stania w miejscu', '0,5')
+    expect(useStore.getState().S.ext.rateStallPct).toBe(0.5)
+  })
+
+  it('goes back to the default when the threshold is cleared', () => {
+    show({ rateStallPct: 0.5 })
+    expect(field('Próg stania w miejscu').value).toBe('0.5')
+    type('Próg stania w miejscu', '')
+    expect(useStore.getState().S.ext.rateStallPct).toBeUndefined()
+  })
+
   it('reads back what is saved', () => {
     show({ rateCorridors: { masa: { by: '%', lo: 0.25, hi: 0.5 } } })
     expect(field('Korytarz masy: Od').value).toBe('0.25')

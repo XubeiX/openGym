@@ -5,7 +5,7 @@
 export const REGISTRY = {
   home: [
     { id: 'checks', tiles: [] },
-    { id: 'today', tiles: ['takeaway', 'guard', 'readiness', 'mass', 'bb', 'goal'] },
+    { id: 'today', tiles: ['takeaway', 'guard', 'rateSignal', 'readiness', 'mass', 'bb', 'goal'] },
     { id: 'weight', tiles: [] },
     { id: 'recent', tiles: [] },
   ],

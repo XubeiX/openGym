@@ -1,6 +1,6 @@
 import { Section, Row, NumberField, Segmented } from '../../components/ui.jsx'
-import { corridorOf, DEFAULT_CORRIDORS } from '../lib/mass-rate.js'
-import { setExtIn } from '../state.js'
+import { corridorOf, DEFAULT_CORRIDORS, DEFAULT_STALL_PCT } from '../lib/mass-rate.js'
+import { setExt, setExtIn } from '../state.js'
 import { L } from '../strings.js'
 
 // Dodatki → Korytarze tempa: a range and a unit for each phase with a direction, phases not yet started included.
@@ -23,5 +23,11 @@ export default function RateCorridorSettings({ ext, unit }) {
         {bound('hi', L.corridorTo)}
       </div>
     })}
+    <Row title={L.stallThreshold} subtitle={L.stallThresholdSub}>
+      <span className="measure-input" style={{ maxWidth: 120 }}>
+        <NumberField nullable value={ext.rateStallPct} placeholder={String(DEFAULT_STALL_PCT)} aria-label={L.stallThreshold}
+          onChange={v => setExt({ rateStallPct: v ?? undefined })} /><i>%</i>
+      </span>
+    </Row>
   </Section>
 }

@@ -20,6 +20,7 @@ export const L = {
   rateLine: (perWeek, pct, unit) => `Tempo ${signed2(perWeek)} ${unit} na tydzień (${signed2(pct)} %)`,
   rateTooFew: 'Za mało ważeń, żeby policzyć tempo.',
   rateStatus: { in: 'W normie', slow: 'Za wolno', fast: 'Za szybko' },
+  rateSignal: { stall: 'Redukcja: w 14 dni masa stoi', cutFast: 'Redukcja: w 14 dni masa spada za szybko', bulkFast: 'Masa: w 14 dni waga rośnie za szybko' },
   measurements: 'Pomiary',
   measurementHistory: 'Historia pomiarów',
   onHome: 'Strona główna',
@@ -102,7 +103,7 @@ export const L = {
   layoutHomeFooter: 'Przytrzymaj uchwyt, żeby zmienić kolejność kart. Wbudowaną kartę masy ciała wyłączysz w Wygląd i Start.',
   layoutStatsFooter: 'Widoczność sekcji Statystyk+ i ich kolejność w obrębie części; kolejność części jest stała. Chipy włączają pojedyncze kafelki.',
   moveSection: name => `Przesuń: ${name}`,
-  todayTiles: { takeaway: 'Wniosek dnia', readiness: 'Readiness', mass: 'Tempo masy', bb: 'Body Battery', goal: 'Najbliższy cel', guard: 'Spadek siły' },
+  todayTiles: { takeaway: 'Wniosek dnia', readiness: 'Readiness', mass: 'Tempo masy', bb: 'Body Battery', goal: 'Najbliższy cel', guard: 'Spadek siły', rateSignal: 'Sygnał tempa' },
   energyTiles: { tdeeCard: 'TDEE', weight: 'Waga', protein: 'Białko' },
   numbersTiles: { tdee: 'TDEE', balAdapt: 'Bilans adapt.', balWatch: 'Bilans zegarek', protein: 'Białko', sleep: 'Sen', prs: 'Rekordy' },
   // Regeneracja (Etap 3)
@@ -193,12 +194,14 @@ export const L = {
   },
   // korytarze tempa
   corridorsSection: 'Korytarze tempa',
-  corridorsFooter: 'Karta wagi ocenia tempo według korytarza trwającej fazy. Redukcja to spadek masy, masa to przyrost. W deloadzie i poza tymi fazami karta pokazuje samo tempo.',
+  corridorsFooter: 'Karta wagi ocenia tempo według korytarza trwającej fazy. Redukcja to spadek masy, masa to przyrost. W deloadzie i poza tymi fazami karta pokazuje samo tempo. Redukcja stoi, gdy MA7 spada w 14 dni o mniej niż próg. Puste pole progu to 0,2%.',
   corridorTitles: { redukcja: 'Korytarz redukcji', masa: 'Korytarz masy' },
   corridorPerWeek: 'na tydzień',
   corridorFrom: 'Od',
   corridorTo: 'Do',
   corridorField: (title, bound) => `${title}: ${bound}`,
+  stallThreshold: 'Próg stania w miejscu',
+  stallThresholdSub: '% masy ciała w 14 dni',
   // ustawienia strażnika siły
   guardSection: 'Strażnik siły',
   guardFooter: 'Strażnik siły pilnuje spadku siły tylko na redukcji. Puste pole progu albo 0 to 5%. Zmiana dochodzi do Statystyk+ w ciągu kilku minut.',

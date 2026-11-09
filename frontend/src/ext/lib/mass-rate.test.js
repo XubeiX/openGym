@@ -102,3 +102,84 @@ describe('massRate: the verdict by phase', () => {
     expect(massRate({ bodyweight, view: 28, ext: {}, now: NOW }).rate.enough).toBe(true)
   })
 })
+
+describe('massRate: the sygnał tempa', () => {
+  // Every day for 40 days at `base`, the last 7 days `drop` lower: MA7 now is base - drop, MA7 14 days ago is base.
+  const step = (drop, base = 100) => Array.from({ length: 41 }, (_, i) => ({ d: ago(40 - i), w: i > 33 ? base - drop : base }))
+  // The drop that makes MA7 fall by exactly `pct` percent of its value now.
+  const dropOfPct = (pct, base = 100) => base - base / (1 + pct / 100)
+  const cut = [{ type: 'redukcja', start: ago(30) }], bulk = [{ type: 'masa', start: ago(30) }]
+  const signal = (bodyweight, ext, view = 7) => massRate({ bodyweight, view, ext, now: NOW }).signal
+
+  it('a redukcja stands when MA7 fell less than 0.2 % in 14 days, or rose', () => {
+    expect(signal(step(0.1), { phases: cut })).toBe('stall')
+    expect(signal(step(0), { phases: cut })).toBe('stall')
+    expect(signal(step(-0.5), { phases: cut })).toBe('stall')
+    expect(signal(step(0.3), { phases: cut })).toBeNull()
+  })
+
+  it('a fall of exactly the threshold is not a stall', () => {
+    expect(signal(step(dropOfPct(0.2)), { phases: cut })).toBeNull()
+  })
+
+  it('takes the threshold from the settings', () => {
+    expect(signal(step(0.3), { phases: cut, rateStallPct: 0.5 })).toBe('stall')
+    expect(signal(step(0.1), { phases: cut, rateStallPct: 0.05 })).toBeNull()
+  })
+
+  it('an empty threshold is the default', () => {
+    expect(signal(step(0.1), { phases: cut, rateStallPct: null })).toBe('stall')
+  })
+
+  it('a redukcja is too fast when the weekly fall over 14 days passes the top of the corridor', () => {
+    // 2.1 kg of 97.9 in 14 days: 1.07 % a week, the corridor ends at 1 %.
+    expect(signal(step(2.1), { phases: cut })).toBe('cutFast')
+    expect(signal(step(dropOfPct(2)), { phases: cut })).toBeNull()
+    expect(signal(step(1.5), { phases: cut })).toBeNull()
+  })
+
+  it('a masa is too fast when the weekly gain over 14 days passes the top of the corridor', () => {
+    // +0.6 kg in 14 days: 0.3 kg a week, the corridor ends at 0.2 kg.
+    expect(signal(step(-0.6), { phases: bulk })).toBe('bulkFast')
+    expect(signal(step(-0.4), { phases: bulk })).toBeNull()
+  })
+
+  it('a corridor in kg compares kg a week, one in % compares % a week', () => {
+    // 0.7 kg of 49.3 in 14 days: 0.35 kg a week, but 0.71 % a week.
+    const log = step(0.7, 50)
+    expect(signal(log, { phases: cut, rateCorridors: { redukcja: { by: 'w', lo: 0.1, hi: 0.5 } } })).toBeNull()
+    expect(signal(log, { phases: cut, rateCorridors: { redukcja: { by: '%', lo: 0.1, hi: 0.5 } } })).toBe('cutFast')
+  })
+
+  it('a corridor of 0 to 0 is no corridor, so nothing is too fast, and a stall still counts', () => {
+    const rateCorridors = { redukcja: { by: '%', lo: 0, hi: 0 }, masa: { by: 'w', lo: 0, hi: 0 } }
+    expect(signal(step(5), { phases: cut, rateCorridors })).toBeNull()
+    expect(signal(step(-5), { phases: bulk, rateCorridors })).toBeNull()
+    expect(signal(step(0.1), { phases: cut, rateCorridors })).toBe('stall')
+  })
+
+  it('gives one signal even when a threshold overlaps the corridor', () => {
+    expect(signal(step(3), { phases: cut, rateStallPct: 5 })).toBe('cutFast')
+  })
+
+  it('a masa has no stall', () => {
+    expect(signal(step(0), { phases: bulk })).toBeNull()
+  })
+
+  it('does not depend on the view', () => {
+    const log = step(2.1), ext = { phases: cut }
+    expect([0, 7, 28].map(view => signal(log, ext, view))).toEqual(['cutFast', 'cutFast', 'cutFast'])
+  })
+
+  it('has no signal in a deload, even inside a redukcja, or outside the phases', () => {
+    expect(signal(step(0), { phases: [...cut, { type: 'deload', start: ago(2), end: ago(0) }] })).toBeNull()
+    expect(signal(step(0), {})).toBeNull()
+    expect(signal(step(0), { phases: [{ type: 'redukcja', start: ago(30), end: ago(1) }] })).toBeNull()
+  })
+
+  it('has no signal without enough data', () => {
+    expect(signal(step(0).slice(-10), { phases: cut })).toBeNull()
+    expect(signal(step(0).slice(0, -5), { phases: cut })).toBeNull()
+    expect(signal([], { phases: cut })).toBeNull()
+  })
+})
