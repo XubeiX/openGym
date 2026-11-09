@@ -122,7 +122,7 @@ export const L = {
   perfMetric: { readiness: 'readiness', hrv: 'HRV', sleep_h: 'sen (h)', sleep_score: 'ocena snu', body_battery_wake: 'Body Battery' },
   sessionsN: n => `${n} ses.`,
   // Siła, Objętość, Dzień po dniu
-  dailyTiles: { sleep: 'Sen', steps: 'Kroki' },
+  dailyTiles: { sleep: 'Sen', steps: 'Trend NEAT' },
   liftChart: 'e1RM w czasie',
   liftNote: 'e1RM z każdej sesji roboczej (bez deloadów); kropki to rekordy.',
   exercise: 'Ćwiczenie',
@@ -134,7 +134,7 @@ export const L = {
   volumeTitle: 'Serie frakcyjne na tydzień, ostatnie bloki',
   volumeNote: 'Seria bezpośrednia = 1, pośrednia = 0,5. Pasmo docelowe 10–20 serii/tydz. (Schoenfeld 2017, Pelland 2024).',
   volumeBands: ['poniżej 4 (utrzymanie)', '4–10 (niska)', '10–20 (docelowa)', 'powyżej 20 (wysoka)'],
-  sleepChart: 'Sen dziennie', stepsChart: 'Kroki dziennie',
+  sleepChart: 'Sen dziennie', neatTitle: 'Trend NEAT',
   homeTileSub: 'TDEE, bilans, waga i białko liczone przez ptv4',
   // cele e1RM (Etap 4d)
   goalsSection: 'Cele',

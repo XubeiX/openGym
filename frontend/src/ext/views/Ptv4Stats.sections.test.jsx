@@ -2,7 +2,7 @@
 // Statystyki+ in four parts under a sticky bar: what the bar offers, where a tap lands, what a link opens.
 import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import Ptv4Stats from './Ptv4Stats.jsx'
 
 const mocks = vi.hoisted(() => ({ S: null }))
@@ -33,6 +33,19 @@ const bar = () => [...host.querySelectorAll('.stats-index .seg button')]
 const labels = () => bar().map(b => b.textContent)
 const headings = el => [...el.querySelectorAll('.ext-sec')].map(h => h.textContent)
 const off = (...ids) => ids.map(id => ({ id, on: false }))
+
+describe('Dzień po dniu', () => {
+  beforeEach(() => { globalThis.ResizeObserver = class { observe() {} disconnect() {} } })
+  const titles = () => [...host.querySelectorAll('#stats-days h2:not(.ext-sec)')].map(h => h.textContent)
+  it('has the Trend NEAT card where the steps chart was', () => {
+    mount()
+    expect(titles()).toEqual(['Sen dziennie', 'Trend NEAT'])
+  })
+  it('keeps the card off when the steps tile was switched off', () => {
+    mount([{ id: 'daily', on: true, tiles: { steps: false } }])
+    expect(titles()).toEqual(['Sen dziennie'])
+  })
+})
 
 describe('Statystyki+ bar', () => {
   it('offers the four parts, each holding its sections', () => {

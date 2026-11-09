@@ -2,20 +2,18 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../store/useStore.js'
 import Icon from '../../components/Icon.jsx'
-import { Segmented, SelectRow } from '../../components/ui.jsx'
+import { SelectRow } from '../../components/ui.jsx'
 import { usePtv4, at } from '../lib/ptv4.js'
 import ExtChart from '../components/ExtChart.jsx'
+import NeatCard from '../components/NeatCard.jsx'
+import { RANGES, since, useRange, RangeSwitch } from '../components/ChartRange.jsx'
 import { L } from '../strings.js'
 import { layoutOf, groupsOf } from '../layout.js'
-import { extOf, setExtIn } from '../state.js'
+import { extOf } from '../state.js'
 import { baseName } from '../lib/goals.js'
 import { phasesOf } from '../lib/phases.js'
 import { freshnessLine } from '../lib/freshness.js'
 import { StatsIndex } from '../../views/Stats.jsx'
-
-// A chart's time window; a year at most, older is history.
-const RANGES = { '1M': 31, '3M': 92, '1Y': 365 }
-const since = (rows, date, days) => { const cut = Date.now() - days * 86400000; return rows.filter(r => at(r[date]) >= cut) }
 
 const C = { s1: 'var(--ext-s1)', s2: 'var(--ext-s2)', s3: 'var(--ext-s3)', neutral: 'var(--ext-neutral)' }
 // rows → a chart series of `key` by `date`
@@ -50,15 +48,6 @@ function Numbers({ k, tiles }) {
     {Object.entries(all).filter(([id]) => tiles[id] !== false).map(([id, [v, sub]]) => <Tile key={id} label={L.tiles[id]} value={v} sub={sub} />)}
   </div>
 }
-
-// A chart's own 1M / 3M / 1Y switch, as on openGym's body-weight card; saved per chart in
-// S.ext.chartRange (3M by default). Liczby keep ptv4's own windows.
-function useRange(id) {
-  const r = extOf(useStore(s => s.S)).chartRange?.[id]
-  return RANGES[r] ? r : '3M'
-}
-const RangeSwitch = ({ id, value }) => <Segmented className="seg-range" value={value} onChange={v => setExtIn('chartRange', id, v)}
-  options={Object.keys(RANGES).map(v => ({ value: v, label: v }))} />
 
 // Masa i energia: TDEE with its range, eat and burn by week; weight with MA7 / MA28; protein by week.
 function Energy({ energy, body, tiles }) {
@@ -291,21 +280,16 @@ function Volume({ rows }) {
   </div>
 }
 
-// Dzień po dniu: sleep and steps by day.
+// Dzień po dniu: sleep by day and Trend NEAT.
 function Daily({ body, tiles }) {
-  const rs = useRange('sleep'), rt = useRange('steps')
-  const int = v => Math.round(v).toLocaleString('pl-PL')
+  const rs = useRange('sleep')
   return <>
     {tiles.sleep !== false && <div className="card">
       <Head title={L.sleepChart} />
       <div style={{ marginTop: 10 }}><RangeSwitch id="sleep" value={rs} />
         <ExtChart h={180} unit="h" series={[series('sleep', since(body, 'date', RANGES[rs]), 'date', 'sleep', C.s1)]} /></div>
     </div>}
-    {tiles.steps !== false && <div className="card">
-      <Head title={L.stepsChart} />
-      <div style={{ marginTop: 10 }}><RangeSwitch id="steps" value={rt} />
-        <ExtChart h={180} fmt={int} series={[series('steps', since(body, 'date', RANGES[rt]), 'date', 'steps', C.s2)]} /></div>
-    </div>}
+    {tiles.steps !== false && <NeatCard rows={body} />}
   </>
 }
 
