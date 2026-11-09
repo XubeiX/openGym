@@ -10,7 +10,7 @@ import { massRate } from '../lib/mass-rate.js'
 import { extOf } from '../state.js'
 
 // Home's "Dziś": ptv4's takeaway, today's Training Readiness, the 28-day mass rate, Body Battery and the nearest goal, plus the way
-// into Statystyki+. All from the sidecar; offline, signed out or no ptv4 → the card is not there.
+// into Statystyki+. All from the sidecar except the sygnał tempa (local S); offline, signed out or no ptv4 → the card is not there.
 export default function TodayCard({ tiles = {} }) {
   const nav = useNavigate()
   const S = useStore(s => s.S)

@@ -1,4 +1,4 @@
-// Tempo masy (GLOSSARY.md in ptv4) as the weight card's view counts it. weightRate's result shape
+// Tempo masy as the weight card's view counts it. weightRate's result shape
 // throughout, so upstream's rateStatus reads every view the same.
 
 import { weightRate, rateStatus } from '../../lib/bodyweight.js'
@@ -14,7 +14,7 @@ const PHASE_DIR = { redukcja: 'lose', masa: 'gain' }
 
 export const corridorOf = (ext, type) => ext?.rateCorridors?.[type] || DEFAULT_CORRIDORS[type]
 
-// S.ext.rateStallPct, in % of body weight over 14 days. No entry = this. ptv4 can read the same key.
+// S.ext.rateStallPct, in % of body weight over 14 days. No entry = this.
 export const DEFAULT_STALL_PCT = 0.2
 
 // How much older than asked a point of the average may be.
@@ -50,8 +50,7 @@ function rateSignal(bodyweight, ext, day) {
   if (!c) return null
   const perWeek = c.change / 2, pct = perWeek / c.value * 100
   if (rateStatus({ enough: true, perWeek, pct }, goal) === 'fast') return goal.dir === 'lose' ? 'cutFast' : 'bulkFast'
-  // Two decimals, as rateStatus reads the corridor.
-  const fell = Math.round(-pct * 200) / 100
+  const fell = -c.change / c.value * 100
   return goal.dir === 'lose' && fell < (ext?.rateStallPct ?? DEFAULT_STALL_PCT) ? 'stall' : null
 }
 

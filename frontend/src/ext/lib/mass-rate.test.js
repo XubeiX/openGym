@@ -119,7 +119,12 @@ describe('massRate: the sygnał tempa', () => {
   })
 
   it('a fall of exactly the threshold is not a stall', () => {
-    expect(signal(step(dropOfPct(0.2)), { phases: cut })).toBeNull()
+    // Numbers exact in binary: dropOfPct(0.2) lands a float's width under 0.2.
+    expect(signal(step(0.25, 100.25), { phases: cut, rateStallPct: 0.25 })).toBeNull()
+  })
+
+  it('a fall just under the threshold is a stall, not rounded up to it', () => {
+    expect(signal(step(dropOfPct(0.196)), { phases: cut })).toBe('stall')
   })
 
   it('takes the threshold from the settings', () => {
