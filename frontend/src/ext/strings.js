@@ -135,6 +135,7 @@ export const L = {
   volumeNote: 'Seria bezpośrednia = 1, pośrednia = 0,5. Pasmo docelowe 10–20 serii/tydz. (Schoenfeld 2017, Pelland 2024).',
   volumeBands: ['poniżej 4 (utrzymanie)', '4–10 (niska)', '10–20 (docelowa)', 'powyżej 20 (wysoka)'],
   sleepChart: 'Sen dziennie', neatTitle: 'Trend NEAT',
+  neatSignal: s => `Spadek aktywności: średnia z 7 dni to ${Math.round(s.avg).toLocaleString('pl-PL')} kroków, o ${num1(-s.pct)}% mniej niż w 28 dniach wcześniej.`,
   homeTileSub: 'TDEE, bilans, waga i białko liczone przez ptv4',
   // cele e1RM (Etap 4d)
   goalsSection: 'Cele',
@@ -208,6 +209,10 @@ export const L = {
   guardLifts: 'Główne boje',
   guardLiftsSub: 'Ćwiczenie z dwóch dni planu jest pilnowane osobno dla każdego dnia.',
   guardThreshold: 'Próg spadku',
+  // ustawienia sygnału NEAT
+  neatSection: 'Sygnał NEAT',
+  neatFooter: 'Ostrzeżenie na karcie Trend NEAT, gdy średnia kroków z 7 dni przez 5 dni z rzędu leży poniżej średniej z 28 dni przed nią o co najmniej próg.',
+  neatDropPct: 'Próg spadku kroków',
   // stan integracji (Etap 2b)
   healthTitle: 'Coś przestało działać',
   healthSection: 'Stan integracji',

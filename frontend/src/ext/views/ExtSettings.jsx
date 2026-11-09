@@ -16,6 +16,7 @@ import GuardSettings from '../components/GuardSettings.jsx'
 const HOURS = Array.from({ length: 24 }, (_, h) => ({ value: h, label: `${h}:00` }))
 const EVERY = [3, 5, 7, 10, 14, 30].map(n => ({ value: n, label: String(n) }))
 const WEEK = [1, 2, 3, 4, 5, 6, 0] // Monday first
+const NEAT_DROPS = [10, 15, 20, 25, 30].map(n => ({ value: n, label: `${n}%` }))
 
 function DayChips({ days, onChange }) {
   const flip = d => onChange(days.includes(d) ? days.filter(x => x !== d) : [...days, d].sort())
@@ -91,6 +92,9 @@ export default function ExtSettings() {
     <PhasesSettings ext={ext} />
     <RateCorridorSettings ext={ext} unit={S.unit} />
     <GuardSettings ext={ext} />
+    <Section title={L.neatSection} footer={L.neatFooter}>
+      <SelectRow title={L.neatDropPct} value={ext.neatDropPct} options={NEAT_DROPS} onChange={neatDropPct => setExt({ neatDropPct })} />
+    </Section>
 
     {checksOn && <Section title={L.checksSection} footer={L.checksFooter}>
       {Object.keys(CHECKS).map(id => {

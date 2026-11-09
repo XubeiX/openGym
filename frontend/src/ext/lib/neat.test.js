@@ -54,3 +54,69 @@ describe('neatTrend', () => {
     expect(days.map(r => r.steps)).toEqual([1, 2, 3])
   })
 })
+
+describe('neatTrend signal', () => {
+  const TODAY = '2026-11-08'
+  const ago = i => new Date(Date.UTC(2026, 10, 8 - i)).toISOString().slice(0, 10)
+  // steps(i): the steps i days back from TODAY (1 = yesterday), null for a day without data.
+  const history = (steps, days = 60) => Array.from({ length: days }, (_, k) => row(ago(k + 1), steps(k + 1)))
+  const signal = (rows, threshold = 15, view = 7, today = TODAY) => neatTrend({ rows, view, threshold, today }).signal
+
+  // Yesterday's 7 days add up to 59500 (avg 8500) against 10000 before them; the 4 days before yesterday are lower still.
+  const exactly15 = history(i => i <= 4 ? 12625 : i <= 7 ? 3000 : 10000)
+
+  it('is active at exactly the threshold and gives the average, the reference and the change', () => {
+    const s = signal(exactly15, 15)
+    expect(s).toEqual({ avg: 8500, base: 10000, pct: -15 })
+  })
+
+  it('is off when the drop is smaller than the threshold', () => {
+    expect(signal(exactly15, 20)).toBeNull()
+  })
+
+  // 5000 for the last 7 days after 10000: the 7-day average is 50, 43, 36, 29, 21, 14 and 7% under the
+  // reference going back from yesterday.
+  const dropped = history(i => i <= 7 ? 5000 : 10000)
+
+  it('needs 5 days in a row that meet the threshold, ending yesterday', () => {
+    expect(signal(dropped, 15)).toEqual({ avg: 5000, base: 10000, pct: -50 }) // 5 days
+    expect(signal(dropped, 25)).toBeNull() // 4 days
+  })
+
+  it('is broken by a day without a 7-day average', () => {
+    // Without the 3rd day back, that day has only 3 days of data in its 7 (4, 5 and 6 back); the other four keep at least 4.
+    const missing = [7, 8, 9]
+    const steps = gap => i => missing.includes(i) || i === gap ? null : i <= 11 ? 1000 : 10000
+    expect(signal(history(steps()))).not.toBeNull()
+    expect(signal(history(steps(3)))).toBeNull()
+  })
+
+  it('is not broken by a day without steps while the average still has its 4 days', () => {
+    expect(signal(history(i => i === 2 ? null : i <= 7 ? 5000 : 10000))).toEqual({ avg: 5000, base: 10000, pct: -50 })
+  })
+
+  it('needs 14 days of data in the reference of each of the 5 days', () => {
+    // The oldest of the 5 days, 5 back, has its reference from 12 back on: 14 days of it take the history to 25 back.
+    const steps = i => i <= 7 ? 1000 : 10000
+    expect(signal(history(steps, 25))).not.toBeNull()
+    expect(signal(history(steps, 24))).toBeNull()
+  })
+
+  it('needs a history at all', () => {
+    expect(signal([])).toBeNull()
+  })
+
+  it('goes away once the average is back above the threshold', () => {
+    const tomorrow = '2026-11-09'
+    expect(signal([...dropped, row(TODAY, 1000)], 15, 7, tomorrow)).not.toBeNull()
+    expect(signal([...dropped, row(TODAY, 40000)], 15, 7, tomorrow)).toBeNull()
+  })
+
+  it('does not count today', () => {
+    expect(signal([...dropped, row(TODAY, 40000)])).toEqual({ avg: 5000, base: 10000, pct: -50 })
+  })
+
+  it('is the same for MA7 and MA28 on the chart', () => {
+    expect(signal(dropped, 15, 28)).toEqual(signal(dropped, 15, 7))
+  })
+})

@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createRoot } from 'react-dom/client'
 import { DEF, useStore } from '../../store/useStore.js'
 import { isoOf } from '../../lib/format.js'
+import { setExt } from '../state.js'
 import NeatCard from './NeatCard.jsx'
 
 const days = i => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - i); return isoOf(d) }
@@ -77,5 +78,33 @@ describe('Trend NEAT card', () => {
   it('has a line from the first day of the window, counted from the days before it', () => {
     install({ chartRange: { steps: '1M' } })
     expect(linePoints(render(<NeatCard rows={rows} />))).toBe(31)
+  })
+
+  describe('signal', () => {
+    // After 10000 a day, 5000 for the last 7 days: 50% down yesterday, the 5th day back 21%.
+    const dropped = () => Array.from({ length: 60 }, (_, i) => ({ date: days(60 - i), steps: 60 - i <= 7 ? 5000 : 10000 }))
+    const SIGNAL = 'Spadek aktywności: średnia z 7 dni to 5000 kroków, o 50% mniej niż w 28 dniach wcześniej.'
+
+    it('has no line without an active signal', () => {
+      expect(render(<NeatCard rows={rows} />).textContent).not.toContain('Spadek aktywności')
+    })
+
+    it('has the line with the average and the drop, at 15% when no threshold is saved', () => {
+      expect(render(<NeatCard rows={dropped()} />).textContent).toContain(SIGNAL)
+    })
+
+    it('keeps the line on MA28', () => {
+      const host = render(<NeatCard rows={dropped()} />)
+      act(() => button(host, 'MA28').click())
+      expect(host.textContent).toContain(SIGNAL)
+    })
+
+    it('follows a change of the threshold at once', () => {
+      const host = render(<NeatCard rows={dropped()} />)
+      act(() => setExt({ neatDropPct: 25 }))
+      expect(host.textContent).not.toContain('Spadek aktywności')
+      act(() => setExt({ neatDropPct: 20 }))
+      expect(host.textContent).toContain(SIGNAL)
+    })
   })
 })

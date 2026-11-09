@@ -6,6 +6,7 @@ import { useStore } from '../store/useStore.js'
 export const EXT_DEFAULTS = {
   weightAvg: 0, // weight card: 0 = weigh-ins, 7 / 28 = MA7 / MA28 (lib/weight-ma.js)
   neatAvg: 7, // Trend NEAT card: 7 / 28 = MA7 / MA28 of the steps (lib/neat.js)
+  neatDropPct: 15, // Sygnał NEAT: the drop in % that sets it off (lib/neat.js), picked in Dodatki
   // chartRange: { <chart id>: '1M' | '3M' | '1Y' }, each Statystyki+ chart's window (default 3M)
   // layout: Home cards and Statystyki+ sections, order and switches (layout.js; it also reads the
   // homeChecks / homeToday / homeWeight / homeRecent switches saved before it)
