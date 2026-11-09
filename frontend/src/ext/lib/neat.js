@@ -15,23 +15,23 @@ function windowOf(steps, n, len) {
 }
 const mean = w => w.sum / w.days
 
-// Sygnał NEAT, always from the 7-day average: yesterday's { avg, base, pct } when each of the last SIGNAL_DAYS
-// days has a 7-day average at least `threshold` % under its base, the 28 days before those 7. Else null.
+// Sygnał NEAT, always from the 7-day average: yesterday's { avg, reference, pct } when each of the last SIGNAL_DAYS
+// days has a 7-day average at least `threshold` % under its reference, the 28 days before those 7. Else null.
 const SIGNAL_DAYS = 5
 function neatSignal(steps, today, threshold) {
   const last = dayNo(today) - 1
-  const at = n => ({ recent: windowOf(steps, n, 7), prior: windowOf(steps, n - 7, 28) })
+  const windowsEnding = n => ({ recent: windowOf(steps, n, 7), prior: windowOf(steps, n - 7, 28) })
   // Sums cross-multiplied, not averages: a quotient can round an exact threshold the wrong way.
   const meets = ({ recent, prior }) => recent && prior && recent.sum * prior.days * 100 <= prior.sum * recent.days * (100 - threshold)
-  for (let k = 0; k < SIGNAL_DAYS; k++) if (!meets(at(last - k))) return null
-  const { recent, prior } = at(last)
-  const avg = mean(recent), base = mean(prior)
-  return { avg, base, pct: (avg - base) * 100 / base }
+  for (let k = 0; k < SIGNAL_DAYS; k++) if (!meets(windowsEnding(last - k))) return null
+  const { recent, prior } = windowsEnding(last)
+  const avg = mean(recent), reference = mean(prior)
+  return { avg, reference, pct: (avg - reference) * 100 / reference }
 }
 
 // rows: ptv4's body set ({ date, steps }), any length: days before a chart's window feed its first points.
 // view: 7 or 28. threshold: the signal's drop in %. today: ISO date, never counted (its steps are not finished).
-// { days: [{ d, steps }], line: [{ d, avg }], signal: { avg, base, pct } | null }, oldest first.
+// { days: [{ d, steps }], line: [{ d, avg }], signal: { avg, reference, pct } | null }, oldest first.
 export function neatTrend({ rows, view, threshold, today }) {
   const days = rows.filter(r => r.date < today && hasSteps(r)).map(r => ({ d: r.date, steps: r.steps }))
     .sort((a, b) => a.d.localeCompare(b.d))

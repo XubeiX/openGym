@@ -67,7 +67,7 @@ describe('neatTrend signal', () => {
 
   it('is active at exactly the threshold and gives the average, the reference and the change', () => {
     const s = signal(exactly15, 15)
-    expect(s).toEqual({ avg: 8500, base: 10000, pct: -15 })
+    expect(s).toEqual({ avg: 8500, reference: 10000, pct: -15 })
   })
 
   it('is active at exactly the threshold when the averages are not whole numbers', () => {
@@ -85,7 +85,7 @@ describe('neatTrend signal', () => {
   const dropped = history(i => i <= 7 ? 5000 : 10000)
 
   it('needs 5 days in a row that meet the threshold, ending yesterday', () => {
-    expect(signal(dropped, 15)).toEqual({ avg: 5000, base: 10000, pct: -50 }) // 5 days
+    expect(signal(dropped, 15)).toEqual({ avg: 5000, reference: 10000, pct: -50 }) // 5 days
     expect(signal(dropped, 25)).toBeNull() // 4 days
   })
 
@@ -98,7 +98,7 @@ describe('neatTrend signal', () => {
   })
 
   it('is not broken by a day without steps while the average still has its 4 days', () => {
-    expect(signal(history(i => i === 2 ? null : i <= 7 ? 5000 : 10000))).toEqual({ avg: 5000, base: 10000, pct: -50 })
+    expect(signal(history(i => i === 2 ? null : i <= 7 ? 5000 : 10000))).toEqual({ avg: 5000, reference: 10000, pct: -50 })
   })
 
   it('needs 14 days of data in the reference of each of the 5 days', () => {
@@ -119,7 +119,7 @@ describe('neatTrend signal', () => {
   })
 
   it('does not count today', () => {
-    expect(signal([...dropped, row(TODAY, 40000)])).toEqual({ avg: 5000, base: 10000, pct: -50 })
+    expect(signal([...dropped, row(TODAY, 40000)])).toEqual({ avg: 5000, reference: 10000, pct: -50 })
   })
 
   it('is the same for MA7 and MA28 on the chart', () => {
