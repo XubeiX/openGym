@@ -1,9 +1,10 @@
 // Trend NEAT: daily steps and their moving average, by the weight MA rule (weight-ma.js): a window
 // of 7 / 28 calendar days up to and including the day, a value only with 4 / 14 days of data in it.
 import { isoOf } from '../../lib/format.js'
-import { dayNo } from './weight-ma.js'
+import { dayNo, MIN } from './weight-ma.js'
 
-const MIN = { 7: 4, 28: 14 }
+// 0 steps is no data, as in ptv4's monthly body summary (analyze.py body_m); its steps_avg_7d does count zeros.
+export const hasSteps = r => r.steps > 0
 const addDays = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return isoOf(d) }
 
 // The `len` days up to and including day number n: { sum, days } of those with data; null below the minimum.
@@ -29,11 +30,10 @@ function neatSignal(steps, today, threshold) {
 }
 
 // rows: ptv4's body set ({ date, steps }), any length: days before a chart's window feed its first points.
-// view: 7 or 28. threshold: the signal's drop in %. today: ISO date, never counted (its steps are not finished);
-// so isn't a day with 0 steps, as in ptv4.
+// view: 7 or 28. threshold: the signal's drop in %. today: ISO date, never counted (its steps are not finished).
 // { days: [{ d, steps }], line: [{ d, avg }], signal: { avg, base, pct } | null }, oldest first.
 export function neatTrend({ rows, view, threshold, today }) {
-  const days = rows.filter(r => r.date < today && r.steps > 0).map(r => ({ d: r.date, steps: r.steps }))
+  const days = rows.filter(r => r.date < today && hasSteps(r)).map(r => ({ d: r.date, steps: r.steps }))
     .sort((a, b) => a.d.localeCompare(b.d))
   const steps = new Map(days.map(r => [dayNo(r.d), r.steps]))
   const line = []
