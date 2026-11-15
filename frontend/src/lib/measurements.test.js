@@ -174,3 +174,22 @@ describe('custom measurement units (#699)', () => {
     expect(toMeasurementDisplay(84.04, 'kg', { id: 'w', name: 'Waist', unit: 'cm' })).toBe(84)
   })
 })
+
+describe('the length unit (#932)', async () => {
+  const { lengthUnitOf, measurementUnit, measurementSeries } = await import('./measurements.js')
+  it('goes with the weight unit until picked, then is its own', () => {
+    expect(lengthUnitOf({ unit: 'lb' })).toBe('in')
+    expect(lengthUnitOf({ unit: 'kg' })).toBe('cm')
+    expect(lengthUnitOf({ unit: 'lb', measureUnit: 'cm' })).toBe('cm')
+    expect(lengthUnitOf({ unit: 'kg', measureUnit: 'in' })).toBe('in')
+    expect(lengthUnitOf({ unit: 'lb', measureUnit: 'junk' })).toBe('in')
+    expect(measurementUnit('cm', { key: 'waist' })).toBe('cm')
+    expect(measurementUnit('in', { key: 'waist' })).toBe('in')
+    expect(measurementUnit('lb', { key: 'waist' })).toBe('in')
+  })
+  it('the chart reads in it', () => {
+    const S = { unit: 'lb', measureUnit: 'cm', measurements: [{ d: '2026-10-01', waist: 80 }] }
+    expect(measurementSeries(S, 'waist').map(p => p.y)).toEqual([80])
+    expect(measurementSeries({ ...S, measureUnit: null }, 'waist')[0].y).toBeCloseTo(31.5, 1)
+  })
+})
