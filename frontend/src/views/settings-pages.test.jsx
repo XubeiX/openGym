@@ -302,6 +302,7 @@ describe('the search lands on a row', () => {
     'voice: Try it', // plays a sample
     'zepp: Install the watch app', // a link to the install guide
     'integrations: Strava', 'integrations: openNutrition', // brand names, not translated: the Integrations page's own words find them
+    'look: Dodatki', // ext: the fork's own page (ext/settings-page.js), left out of the search on purpose
     'live: Effort', // reads "Effort (RIR)" once effort is on; "Effort per set" answers the word
   ])
   // The other way round (#1105): every row a page shows can be found, so a new row cannot slip
